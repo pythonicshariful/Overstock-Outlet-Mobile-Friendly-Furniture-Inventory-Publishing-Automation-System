@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Database
+*.db
+*.sqlite3
+
+# Uploads & User Media (keep directory structure)
+uploads/*
+!uploads/.gitkeep
+!uploads/thumbnails/
+uploads/thumbnails/*
+!uploads/thumbnails/.gitkeep
+
+# Environment & Secrets
+.env
+.env.local
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: overstock_inventory_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./data:/app/data
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=sqlite:////app/data/overstock.db
+      - MOCK_SOCIAL_PUBLISHING=true
+

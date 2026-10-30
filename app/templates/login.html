@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - Overstock Outlet{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+  <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-body p-4">
+        
+        <div class="text-center mb-4">
+          <div class="bg-navy text-white rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-2 shadow-sm" style="width: 64px; height: 64px;">
+            <i class="bi bi-box-seam-fill fs-2 text-warning"></i>
+          </div>
+          <h4 class="fw-bold text-navy mb-1">Overstock Outlet</h4>
+          <p class="text-muted small">Furniture Inventory & Publishing System</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Username</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-person text-muted"></i></span>
+              <input type="text" id="username" class="form-control form-control-lg fs-6" placeholder="Enter username" required autofocus>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Password</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-key text-muted"></i></span>
+              <input type="password" id="password" class="form-control form-control-lg fs-6" placeholder="Enter password" required>
+            </div>
+          </div>
+
+          <button type="submit" id="loginBtn" class="btn btn-navy w-100 btn-touch text-white bg-navy mb-3">
+            <span id="btnText">Sign In</span>
+            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2"></span>
+          </button>
+        </form>
+
+        <div class="card bg-light border-0 p-3 mt-3 rounded-3">
+          <div class="fw-bold fs-7 mb-2 text-navy">Quick Login (One-Click Demo):</div>
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-primary btn-sm py-2" onclick="fillAndLogin('employee', 'overstock123')">
+              <i class="bi bi-person me-1"></i> Floor Associate (employee)
+            </button>
+            <button class="btn btn-outline-dark btn-sm py-2" onclick="fillAndLogin('admin', 'admin123')">
+              <i class="bi bi-shield-lock me-1"></i> Store Manager (admin)
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  await performLogin(u, p);
+}
+
+function fillAndLogin(u, p) {
+  document.getElementById('username').value = u;
+  document.getElementById('password').value = p;
+  performLogin(u, p);
+}
+
+async function performLogin(username, password) {
+  const btn = document.getElementById('loginBtn');
+  const btnText = document.getElementById('btnText');
+  const btnSpinner = document.getElementById('btnSpinner');
+
+  btn.disabled = true;
+  btnText.textContent = "Signing in...";
+  btnSpinner.classList.remove('d-none');
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('user_role', data.role);
+      showToast('Logged in successfully! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
+    } else {
+      const err = await res.json();
+      showToast(err.detail || 'Invalid username or password', 'danger');
+    }
+  } catch (err) {
+    showToast('Network error while signing in', 'danger');
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = "Sign In";
+    btnSpinner.classList.add('d-none');
+  }
+}
+</script>
+{% endblock %}
+

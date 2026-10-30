@@ -1,0 +1,175 @@
+/* Overstock Outlet Mobile-First CSS */
+:root {
+  --primary-navy: #0f2744;
+  --primary-navy-dark: #091a2e;
+  --accent-gold: #e69500;
+  --accent-gold-hover: #cf8400;
+  --success-green: #15803d;
+  --danger-red: #b91c1c;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-700: #334155;
+  --slate-900: #0f172a;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--slate-900);
+  background-color: #f8fafc;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bg-navy {
+  background-color: var(--primary-navy) !important;
+}
+
+.text-navy {
+  color: var(--primary-navy) !important;
+}
+
+.fs-7 { font-size: 0.875rem !important; }
+.fs-8 { font-size: 0.75rem !important; }
+
+/* Touch Friendly Buttons (min 44-48px height) */
+.btn-touch {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+}
+
+.btn-gold {
+  background-color: var(--accent-gold);
+  color: #fff;
+  border: none;
+}
+.btn-gold:hover, .btn-gold:focus, .btn-gold:active {
+  background-color: var(--accent-gold-hover);
+  color: #fff;
+}
+
+/* Card Styling */
+.product-card {
+  border-radius: 12px;
+  border: 1px solid var(--slate-200);
+  background: #ffffff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.product-card:active {
+  transform: scale(0.99);
+}
+
+.product-img-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--slate-100);
+  overflow: hidden;
+}
+
+.product-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.price-tag {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-navy);
+}
+
+.original-price-tag {
+  font-size: 0.85rem;
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+/* Photo Upload Zone */
+.photo-drop-zone {
+  border: 2px dashed #94a3b8;
+  border-radius: 14px;
+  padding: 24px 16px;
+  text-align: center;
+  background-color: #f8fafc;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.photo-drop-zone:hover, .photo-drop-zone.dragover {
+  background-color: #f1f5f9;
+  border-color: var(--accent-gold);
+}
+
+.thumb-preview-box {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid var(--slate-200);
+}
+
+.thumb-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb-preview-box .delete-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(0,0,0,0.65);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.thumb-preview-box.is-primary {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px rgba(230, 149, 0, 0.4);
+}
+
+/* Status Badges */
+.badge-draft { background-color: #64748b; color: #fff; }
+.badge-published { background-color: #16a34a; color: #fff; }
+.badge-archived { background-color: #475569; color: #fff; }
+
+.badge-instock { background-color: #dcfce7; color: #166534; }
+.badge-lowstock { background-color: #fef9c3; color: #854d0e; }
+.badge-sold { background-color: #fee2e2; color: #991b1b; }
+
+/* Sticky mobile footer bar for forms */
+.sticky-form-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--slate-200);
+  padding: 12px 16px;
+  z-index: 1030;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 992px) {
+  .sticky-form-footer {
+    position: static;
+    box-shadow: none;
+    border-top: none;
+    padding: 0;
+  }
+}
+

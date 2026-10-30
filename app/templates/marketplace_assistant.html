@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Marketplace Assistant - {{ product.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+
+    <!-- Header Navigation -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <a href="/products/{{ product.id }}" class="btn btn-outline-secondary btn-sm rounded-circle" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+          <h4 class="fw-bold text-navy mb-0">Marketplace Publishing Assistant</h4>
+          <span class="text-muted fs-8">Compliant Step-by-Step Guided Posting</span>
+        </div>
+      </div>
+      <span class="badge bg-info text-dark fw-bold px-3 py-2">Assisted Workflow</span>
+    </div>
+
+    <!-- Official Notice Banner -->
+    <div class="alert alert-primary border-0 shadow-sm rounded-3 mb-3 d-flex align-items-start gap-2">
+      <i class="bi bi-info-circle-fill text-primary fs-5 mt-1"></i>
+      <div class="small">
+        Meta's official policies protect Marketplace listings from third-party bot automation. 
+        Use our <strong>1-Tap Copy Pack</strong> and follow the 4 quick steps below to publish safely without account risk!
+      </div>
+    </div>
+
+    <!-- Big Action Button: Open Facebook Marketplace -->
+    <div class="card border-0 shadow-sm rounded-4 bg-navy text-white p-3 mb-3 text-center">
+      <div class="fs-6 fw-bold mb-1">Ready to Post?</div>
+      <p class="text-white-50 fs-8 mb-3">Tapping below opens the official Facebook Marketplace listing creator:</p>
+      <a href="https://www.facebook.com/marketplace/create/item" target="_blank" rel="noopener noreferrer" class="btn btn-warning btn-touch fw-bold fs-6 shadow">
+        <i class="bi bi-box-arrow-up-right me-2"></i> 1. Open Facebook Marketplace
+      </a>
+    </div>
+
+    <!-- 1-CLICK COPY PACK -->
+    <div class="card border-0 shadow-sm rounded-3 mb-3">
+      <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+        <span class="fw-bold text-navy"><i class="bi bi-clipboard-check text-warning me-2 fs-5"></i>2. Tap to Copy Listing Data</span>
+        <span class="fs-8 text-muted">1-Tap to Copy</span>
+      </div>
+      <div class="card-body p-3">
+
+        <!-- Title -->
+        <div class="mb-3">
+          <label class="form-label fs-8 fw-bold text-muted mb-1">LISTING TITLE</label>
+          <div class="input-group">
+            <input type="text" id="copyTitle" class="form-control" value="{{ guide.title }}" readonly>
+            <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard('{{ guide.title }}', this)">
+              <i class="bi bi-clipboard me-1"></i> Copy Title
+            </button>
+          </div>
+        </div>
+
+        <!-- Price & Category Row -->
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fs-8 fw-bold text-muted mb-1">PRICE ($)</label>
+            <div class="input-group">
+              <input type="text" id="copyPrice" class="form-control" value="{{ guide.price|int }}" readonly>
+              <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard('{{ guide.price|int }}', this)">
+                <i class="bi bi-clipboard"></i> Copy
+              </button>
+            </div>
+          </div>
+          <div class="col-6">
+            <label class="form-label fs-8 fw-bold text-muted mb-1">CATEGORY</label>
+            <input type="text" class="form-control bg-light" value="{{ guide.category }}" readonly>
+          </div>
+        </div>
+
+        <!-- Condition & Location Row -->
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label fs-8 fw-bold text-muted mb-1">CONDITION</label>
+            <input type="text" class="form-control bg-light" value="{{ guide.condition }}" readonly>
+          </div>
+          <div class="col-6">
+            <label class="form-label fs-8 fw-bold text-muted mb-1">LOCATION</label>
+            <input type="text" class="form-control bg-light" value="Baltimore, MD" readonly>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label fs-8 fw-bold text-muted mb-0">OPTIMIZED DESCRIPTION</label>
+            <button class="btn btn-outline-primary btn-sm py-1" type="button" onclick="copyToClipboard(document.getElementById('copyDesc').value, this)">
+              <i class="bi bi-clipboard me-1"></i> Copy Description
+            </button>
+          </div>
+          <textarea id="copyDesc" class="form-control fs-8" rows="6" readonly>{{ guide.description }}</textarea>
+        </div>
+
+        <!-- Suggested Search Tags -->
+        <div>
+          <label class="form-label fs-8 fw-bold text-muted mb-1">SEARCH TAGS</label>
+          <div class="d-flex flex-wrap gap-1">
+            {% for tag in guide.suggested_tags %}
+              <span class="badge bg-light text-dark border fs-8 py-1 px-2" style="cursor: pointer;" onclick="copyToClipboard('{{ tag }}', null)" title="Click to copy tag">
+                #{{ tag }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PHOTOS REFERENCE PACK -->
+    <div class="card border-0 shadow-sm rounded-3 mb-3">
+      <div class="card-header bg-white py-3 border-bottom">
+        <span class="fw-bold text-navy"><i class="bi bi-images text-warning me-2 fs-5"></i>3. Product Photos Order</span>
+      </div>
+      <div class="card-body p-3">
+        <p class="small text-muted mb-2">Upload these photos in Facebook Marketplace in order:</p>
+        <div class="d-flex gap-2 overflow-x-auto pb-2">
+          {% for img in guide.images %}
+            <div class="position-relative text-center" style="min-width: 100px;">
+              <span class="badge bg-navy position-absolute top-0 start-0 m-1">#{{ img.index }}</span>
+              <img src="{{ img.thumbnail_url or img.url }}" class="rounded border" style="width: 100px; height: 100px; object-fit: cover;">
+              <a href="{{ img.url }}" download class="btn btn-outline-secondary btn-xs mt-1 w-100 py-0" style="font-size: 11px;">
+                <i class="bi bi-download"></i> Save
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETION CONFIRMATION CARD -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4 bg-light">
+      <div class="card-body p-3 text-center">
+        <h6 class="fw-bold text-navy mb-1">Finished Posting to Facebook Marketplace?</h6>
+        <p class="text-muted small mb-3">Click below to record this item as Published and update your store inventory.</p>
+        <button type="button" class="btn btn-success btn-touch fw-bold px-4" onclick="recordMarketplaceCompletion({{ product.id }})">
+          <i class="bi bi-check-circle-fill me-2"></i> Mark as Published on Marketplace
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function recordMarketplaceCompletion(productId) {
+  try {
+    const res = await fetch(`/api/publish/${productId}/marketplace-complete`, { method: 'POST' });
+    if (res.ok) {
+      showToast('Marketplace listing recorded successfully!', 'success');
+      setTimeout(() => {
+        window.location.href = `/products/${productId}`;
+      }, 800);
+    } else {
+      showToast('Error recording listing status', 'danger');
+    }
+  } catch (err) {
+    showToast('Network error', 'danger');
+  }
+}
+</script>
+{% endblock %}
+

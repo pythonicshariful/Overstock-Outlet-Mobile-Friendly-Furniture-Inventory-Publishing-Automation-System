@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}{% if product %}Edit {{ product.title }}{% else %}Add Furniture - Overstock Outlet{% endblock %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <a href="/dashboard" class="btn btn-outline-secondary btn-sm rounded-circle" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <h4 class="fw-bold text-navy mb-0">{% if product %}Edit Product{% else %}Add New Furniture{% endif %}</h4>
+      </div>
+      <span class="badge bg-light text-muted border fs-8">Overstock Outlet</span>
+    </div>
+
+    <!-- Duplicate Alert Container -->
+    <div id="duplicateAlert" class="alert alert-warning d-none shadow-sm mb-3" role="alert">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+        <div>
+          <strong id="dupTitle">Duplicate Warning!</strong>
+          <div id="dupMsg" class="small">A similar product was recently added.</div>
+        </div>
+      </div>
+    </div>
+
+    <form id="productForm" onsubmit="handleFormSubmit(event)">
+      <input type="hidden" id="productId" value="{{ product.id if product else '' }}">
+
+      <!-- STEP 1: MOBILE CAMERA & PHOTOS -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+          <span class="fw-bold text-navy"><i class="bi bi-camera-fill text-warning me-2 fs-5"></i>1. Product Photos</span>
+          <span class="fs-8 text-muted">First photo will be main cover</span>
+        </div>
+        <div class="card-body p-3">
+          
+          <!-- Drop & Mobile Camera Zone -->
+          <div class="photo-drop-zone mb-3" id="dropZone" onclick="triggerFileInput()">
+            <div class="d-flex flex-column align-items-center">
+              <i class="bi bi-cloud-arrow-up-fill text-navy fs-1 mb-2"></i>
+              <div class="fw-bold fs-6 text-navy mb-1">Tap to Take Photo or Browse Gallery</div>
+              <div class="text-muted small">Supports JPG, PNG, WebP (up to 15MB)</div>
+            </div>
+            
+            <!-- Hidden inputs -->
+            <input type="file" id="fileInput" accept="image/*" multiple class="d-none">
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="d-none">
+          </div>
+
+          <!-- Quick Mobile Camera Button -->
+          <div class="d-flex gap-2 mb-3">
+            <button type="button" class="btn btn-outline-primary btn-sm flex-grow-1 py-2" onclick="triggerCameraInput()">
+              <i class="bi bi-camera-fill me-1"></i> Open Camera
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm flex-grow-1 py-2" onclick="triggerFileInput()">
+              <i class="bi bi-images me-1"></i> Gallery
+            </button>
+          </div>
+
+          <!-- Image Previews Container -->
+          <div id="previewContainer" class="d-flex flex-wrap gap-2">
+            {% if product and product.images %}
+              {% for img in product.images %}
+                <div class="thumb-preview-box {% if img.is_primary %}is-primary{% endif %}" id="existing-img-{{ img.id }}">
+                  <img src="{{ img.thumbnail_path or img.filepath }}" alt="product photo">
+                  <button type="button" class="delete-btn" onclick="deleteExistingImage({{ product.id }}, {{ img.id }})">&times;</button>
+                  {% if img.is_primary %}
+                    <span class="badge bg-warning text-dark position-absolute bottom-0 start-0 m-1 fs-8">Main</span>
+                  {% else %}
+                    <button type="button" class="btn btn-dark btn-xs position-absolute bottom-0 start-0 m-1 fs-8 py-0 px-1" onclick="setPrimaryImage({{ product.id }}, {{ img.id }})">Make Main</button>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- STEP 2: ESSENTIAL PRODUCT INFO -->
+      <div class="card border-0 shadow-sm rounded-3 mb-3">
+        <div class="card-header bg-white py-3 border-bottom">
+          <span class="fw-bold text-navy"><i class="bi bi-pencil-square text-warning me-2 fs-5"></i>2. Product Details</span>
+        </div>
+        <div class="card-body p-3">
+          
+          <div class="mb-3">
+            <label class="form-label fw-bold">Product Title <span class="text-danger">*</span></label>
+            <input type="text" id="title" class="form-control form-control-lg fs-6" placeholder="e.g. Modern Gray Sectional Sofa with Chaise" value="{{ product.title if product else '' }}" required>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-bold">Outlet Price ($) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" step="0.01" min="0" id="price" class="form-control form-control-lg fs-6" placeholder="299.00" value="{{ product.price if product else '' }}" required>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold text-muted">Retail Price ($) <span class="fs-8">(Optional)</span></label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number" step="0.01" min="0" id="originalPrice" class="form-control form-control-lg fs-6" placeholder="799.00" value="{{ product.original_price if product and product.original_price else '' }}">
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold">Category</label>
+              <select id="category" class="form-select">
+                {% for cat in ["Living Room", "Bedroom", "Dining Room", "Office", "Outdoor", "Decor & Rugs", "Mattresses", "Clearance", "Other"] %}
+                  <option value="{{ cat }}" {% if product and product.category == cat %}selected{% elif not product and cat == 'Living Room' %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">Condition</label>
+              <select id="condition" class="form-select">
+                {% for cond in ["Brand New", "Like New", "Floor Model", "Excellent", "Good", "Clearance"] %}
+                  <option value="{{ cond }}" {% if product and product.condition == cond %}selected{% elif not product and cond == 'Brand New' %}selected{% endif %}>{{ cond }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold">Availability</label>
+              <select id="availability" class="form-select">
+                {% for avail in ["In Stock", "Low Stock", "Reserved", "Sold"] %}
+                  <option value="{{ avail }}" {% if product and product.availability == avail %}selected{% elif not product and avail == 'In Stock' %}selected{% endif %}>{{ avail }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">Brand / Maker</label>
+              <input type="text" id="brand" class="form-control" placeholder="e.g. Ashley, West Elm" value="{{ product.brand if product and product.brand else '' }}">
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold">Color</label>
+              <input type="text" id="color" class="form-control" placeholder="e.g. Charcoal Gray" value="{{ product.color if product and product.color else '' }}">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold">Dimensions</label>
+              <input type="text" id="dimensions" class="form-control" placeholder="e.g. 84\"W x 36\"D x 34\"H" value="{{ product.dimensions if product and product.dimensions else '' }}">
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-semibold mb-0">Description & Notes</label>
+              <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="autoGenerateDescription()">
+                <i class="bi bi-magic me-1"></i> Auto-Generate
+              </button>
+            </div>
+            <textarea id="description" rows="3" class="form-control" placeholder="Add details like material, condition notes, cushions, or features...">{{ product.description if product and product.description else '' }}</textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- STEP 3: PUBLISHING CHANNELS -->
+      <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-header bg-white py-3 border-bottom">
+          <span class="fw-bold text-navy"><i class="bi bi-broadcast text-warning me-2 fs-5"></i>3. Publish Online</span>
+        </div>
+        <div class="card-body p-3">
+          
+          <div class="form-check form-switch p-2 bg-light rounded-3 mb-2 d-flex align-items-center justify-content-between">
+            <label class="form-check-label d-flex align-items-center gap-2 mb-0" for="publishFbPage">
+              <i class="bi bi-facebook fs-4 text-primary"></i>
+              <div>
+                <span class="fw-semibold d-block">Facebook Business Page</span>
+                <span class="text-muted fs-8">Post to Overstock Outlet Page Feed</span>
+              </div>
+            </label>
+            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="publishFbPage" checked>
+          </div>
+
+          <div class="form-check form-switch p-2 bg-light rounded-3 mb-2 d-flex align-items-center justify-content-between">
+            <label class="form-check-label d-flex align-items-center gap-2 mb-0" for="publishInstagram">
+              <i class="bi bi-instagram fs-4 text-danger"></i>
+              <div>
+                <span class="fw-semibold d-block">Instagram Business Account</span>
+                <span class="text-muted fs-8">Publish photo feed post</span>
+              </div>
+            </label>
+            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="publishInstagram" checked>
+          </div>
+
+          <div class="form-check form-switch p-2 bg-light rounded-3 d-flex align-items-center justify-content-between">
+            <label class="form-check-label d-flex align-items-center gap-2 mb-0" for="prepareMarketplace">
+              <i class="bi bi-shop fs-4 text-info"></i>
+              <div>
+                <span class="fw-semibold d-block">Facebook Marketplace (Assisted)</span>
+                <span class="text-muted fs-8">Prepare copy-ready listing & guide</span>
+              </div>
+            </label>
+            <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="prepareMarketplace" checked>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="sticky-form-footer d-flex gap-2 bg-white p-3 rounded-3 shadow-sm mb-4">
+        <button type="button" class="btn btn-outline-secondary btn-touch flex-grow-1" onclick="saveProduct(false)">
+          <i class="bi bi-file-earmark-arrow-down me-1"></i> Save as Draft
+        </button>
+        <button type="submit" id="submitBtn" class="btn btn-gold btn-touch flex-grow-1 text-white shadow-sm">
+          <i class="bi bi-send-fill me-1"></i> <span id="submitBtnText">Save & Publish</span>
+          <span id="submitSpinner" class="spinner-border spinner-border-sm d-none ms-1"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  setupImageUploader('dropZone', 'fileInput', 'cameraInput', 'previewContainer');
+});
+
+function triggerFileInput() {
+  document.getElementById('fileInput').click();
+}
+
+function triggerCameraInput() {
+  document.getElementById('cameraInput').click();
+}
+
+function autoGenerateDescription() {
+  const title = document.getElementById('title').value.trim();
+  const cat = document.getElementById('category').value;
+  const cond = document.getElementById('condition').value;
+  const color = document.getElementById('color').value.trim();
+  const brand = document.getElementById('brand').value.trim();
+  const dims = document.getElementById('dimensions').value.trim();
+
+  let desc = `Premium quality ${cond.toLowerCase()} ${title || cat}. `;
+  if (brand) desc += `Crafted by ${brand}. `;
+  if (color) desc += `Features a sleek ${color} finish. `;
+  if (dims) desc += `Dimensions: ${dims}. `;
+  desc += `Clean, comfortable, and ready for your home. Available for immediate pickup at Overstock Outlet Baltimore!`;
+
+  document.getElementById('description').value = desc;
+  showToast('Description auto-generated!', 'info');
+}
+
+async function deleteExistingImage(productId, imageId) {
+  if (!confirm('Delete this image?')) return;
+  try {
+    const res = await fetch(`/api/products/${productId}/images/${imageId}`, { method: 'DELETE' });
+    if (res.ok) {
+      document.getElementById(`existing-img-${imageId}`)?.remove();
+      showToast('Image deleted', 'info');
+    }
+  } catch (err) {
+    showToast('Failed to delete image', 'danger');
+  }
+}
+
+async function setPrimaryImage(productId, imageId) {
+  try {
+    const res = await fetch(`/api/products/${productId}/images/${imageId}/set-primary`, { method: 'PUT' });
+    if (res.ok) {
+      location.reload();
+    }
+  } catch (err) {
+    showToast('Failed to set primary image', 'danger');
+  }
+}
+
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  await saveProduct(true);
+}
+
+async function saveProduct(shouldPublish = false) {
+  const title = document.getElementById('title').value.trim();
+  const price = parseFloat(document.getElementById('price').value);
+  const origPriceVal = document.getElementById('originalPrice').value;
+  const original_price = origPriceVal ? parseFloat(origPriceVal) : null;
+  const category = document.getElementById('category').value;
+  const condition = document.getElementById('condition').value;
+  const availability = document.getElementById('availability').value;
+  const brand = document.getElementById('brand').value.trim() || null;
+  const color = document.getElementById('color').value.trim() || null;
+  const dimensions = document.getElementById('dimensions').value.trim() || null;
+  const description = document.getElementById('description').value.trim() || null;
+  const productId = document.getElementById('productId').value;
+
+  if (!title || isNaN(price)) {
+    showToast('Please fill in Title and Price', 'warning');
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  const submitBtnText = document.getElementById('submitBtnText');
+  const submitSpinner = document.getElementById('submitSpinner');
+
+  submitBtn.disabled = true;
+  submitSpinner.classList.remove('d-none');
+  submitBtnText.textContent = shouldPublish ? 'Publishing...' : 'Saving...';
+
+  try {
+    const payload = {
+      title,
+      price,
+      original_price,
+      category,
+      condition,
+      availability,
+      brand,
+      color,
+      dimensions,
+      description,
+      status: shouldPublish ? 'Published' : 'Draft'
+    };
+
+    let savedProduct;
+    let url = productId ? `/api/products/${productId}` : '/api/products';
+    let method = productId ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      if (res.status === 409) {
+        document.getElementById('duplicateAlert').classList.remove('d-none');
+        document.getElementById('dupMsg').textContent = err.detail;
+        showToast(err.detail, 'warning');
+        return;
+      }
+      throw new Error(err.detail || 'Failed to save product');
+    }
+
+    savedProduct = await res.json();
+    const pid = savedProduct.id;
+
+    // 2. Upload any selected images
+    if (selectedFiles.length > 0) {
+      submitBtnText.textContent = 'Uploading photos...';
+      const formData = new FormData();
+      selectedFiles.forEach(file => {
+        formData.append('files', file);
+      });
+
+      const imgRes = await fetch(`/api/products/${pid}/images`, {
+        method: 'POST',
+        body: formData
+      });
+      if (!imgRes.ok) {
+        console.warn('Image upload error:', await imgRes.text());
+      }
+    }
+
+    // 3. Perform Publishing if requested
+    if (shouldPublish) {
+      submitBtnText.textContent = 'Publishing to social channels...';
+      const platforms = [];
+      if (document.getElementById('publishFbPage').checked) platforms.push('facebook_page');
+      if (document.getElementById('publishInstagram').checked) platforms.push('instagram');
+      if (document.getElementById('prepareMarketplace').checked) platforms.push('marketplace');
+
+      if (platforms.length > 0) {
+        const pubRes = await fetch(`/api/publish/${pid}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ platforms: platforms })
+        });
+        const pubData = await pubRes.json();
+      }
+
+      showToast('Product saved and published successfully!', 'success');
+      
+      // If marketplace was checked, redirect directly to the assistant guide
+      if (document.getElementById('prepareMarketplace').checked) {
+        setTimeout(() => {
+          window.location.href = `/products/${pid}/marketplace-assistant`;
+        }, 800);
+        return;
+      }
+    } else {
+      showToast('Product saved as draft!', 'success');
+    }
+
+    setTimeout(() => {
+      window.location.href = `/products/${pid}`;
+    }, 800);
+
+  } catch (err) {
+    showToast(err.message, 'danger');
+  } finally {
+    submitBtn.disabled = false;
+    submitSpinner.classList.add('d-none');
+    submitBtnText.textContent = shouldPublish ? 'Save & Publish' : 'Save as Draft';
+  }
+}
+</script>
+{% endblock %}
+

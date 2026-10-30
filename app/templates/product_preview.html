@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Preview: {{ product.title }} - Overstock Outlet{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <a href="/products/{{ product.id }}" class="btn btn-outline-secondary btn-sm rounded-circle" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;">
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+          <h4 class="fw-bold text-navy mb-0">Live Social Previews</h4>
+          <span class="text-muted fs-8">Review how your listing appears to buyers</span>
+        </div>
+      </div>
+      <a href="/products/{{ product.id }}/marketplace-assistant" class="btn btn-warning btn-sm fw-bold">
+        <i class="bi bi-shop me-1"></i> Open Marketplace Guide
+      </a>
+    </div>
+
+    <!-- Preview Navigation Tabs -->
+    <ul class="nav nav-pills nav-fill bg-white p-2 rounded-3 shadow-sm mb-3" id="previewTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-bold d-flex align-items-center justify-content-center gap-2" id="fb-tab" data-bs-toggle="tab" data-bs-target="#fb-preview" type="button" role="tab">
+          <i class="bi bi-facebook text-primary fs-5"></i> Facebook Page
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold d-flex align-items-center justify-content-center gap-2" id="ig-tab" data-bs-toggle="tab" data-bs-target="#ig-preview" type="button" role="tab">
+          <i class="bi bi-instagram text-danger fs-5"></i> Instagram Feed
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link fw-bold d-flex align-items-center justify-content-center gap-2" id="mp-tab" data-bs-toggle="tab" data-bs-target="#mp-preview" type="button" role="tab">
+          <i class="bi bi-shop text-info fs-5"></i> Marketplace
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="previewTabContent">
+
+      <!-- 1. FACEBOOK PAGE PREVIEW -->
+      <div class="tab-pane fade show active" id="fb-preview" role="tabpanel">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white mx-auto" style="max-width: 540px;">
+          <!-- Facebook Post Header -->
+          <div class="d-flex align-items-center gap-2 p-3">
+            <div class="rounded-circle bg-navy text-warning d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+              <i class="bi bi-box-seam-fill fs-5"></i>
+            </div>
+            <div>
+              <div class="fw-bold text-dark fs-6 d-flex align-items-center gap-1">
+                <span>Overstock Outlet</span>
+                <i class="bi bi-patch-check-fill text-primary fs-7"></i>
+              </div>
+              <div class="text-muted fs-8">Just now • Baltimore, MD • <i class="bi bi-globe"></i></div>
+            </div>
+          </div>
+
+          <!-- Post Caption Text -->
+          <div class="px-3 pb-2 text-dark fs-7" style="white-space: pre-line;">
+🛋️ NEW INVENTORY: {{ product.title }}
+💰 Price: ${{ "%.2f"|format(product.price) }}{% if product.original_price and product.original_price > product.price %} (Retail: ${{ "%.2f"|format(product.original_price) }} - Save ${{ "%.0f"|format(product.original_price - product.price) }}!){% endif %}
+
+🏷️ Brand: {{ product.brand or 'Overstock Selected' }}
+✨ Condition: {{ product.condition }}
+📦 Availability: {{ product.availability }}
+{% if product.dimensions %}📐 Dimensions: {{ product.dimensions }}{% endif %}
+{% if product.description %}{{ product.description }}{% endif %}
+
+📍 Available now at Overstock Outlet
+📌 Baltimore, MD | First come, first served!
+#OverstockOutlet #BaltimoreFurniture #FurnitureDeals
+          </div>
+
+          <!-- Post Photo Gallery -->
+          {% if product.images and product.images|length > 0 %}
+            <div class="ratio ratio-4x3 bg-light">
+              <img src="{{ product.images[0].filepath }}" class="w-100 h-100 object-fit-cover" alt="fb post image">
+            </div>
+          {% endif %}
+
+          <!-- Facebook Post Footer -->
+          <div class="p-3 border-top d-flex justify-content-around text-muted fs-7">
+            <span><i class="bi bi-hand-thumbs-up me-1"></i> Like</span>
+            <span><i class="bi bi-chat me-1"></i> Comment</span>
+            <span><i class="bi bi-share me-1"></i> Share</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. INSTAGRAM PREVIEW -->
+      <div class="tab-pane fade" id="ig-preview" role="tabpanel">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white mx-auto" style="max-width: 460px;">
+          <!-- Instagram Header -->
+          <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-circle p-1 bg-gradient border" style="width: 38px; height: 38px;">
+                <div class="rounded-circle bg-navy text-warning w-100 h-100 d-flex align-items-center justify-content-center">
+                  <i class="bi bi-box-seam-fill fs-7"></i>
+                </div>
+              </div>
+              <div>
+                <span class="fw-bold fs-7 d-block">overstockoutletbmore</span>
+                <span class="text-muted fs-8">Baltimore, Maryland</span>
+              </div>
+            </div>
+            <i class="bi bi-three-dots"></i>
+          </div>
+
+          <!-- Instagram Photo (Square ratio) -->
+          <div class="ratio ratio-1x1 bg-light">
+            {% if product.images and product.images|length > 0 %}
+              <img src="{{ product.images[0].filepath }}" class="w-100 h-100 object-fit-cover" alt="ig image">
+            {% else %}
+              <div class="d-flex align-items-center justify-content-center text-muted">No Photo</div>
+            {% endif %}
+          </div>
+
+          <!-- Instagram Action Icons -->
+          <div class="p-3">
+            <div class="d-flex justify-content-between mb-2 fs-5">
+              <div class="d-flex gap-3">
+                <i class="bi bi-heart"></i>
+                <i class="bi bi-chat"></i>
+                <i class="bi bi-send"></i>
+              </div>
+              <i class="bi bi-bookmark"></i>
+            </div>
+            <div class="fw-bold fs-8 mb-1">Liked by baltimoredeals and others</div>
+            <div class="fs-8" style="white-space: pre-line;">
+              <span class="fw-bold me-1">overstockoutletbmore</span>✨ JUST IN: {{ product.title }}
+💥 Deal Price: ${{ "%.2f"|format(product.price) }}
+⭐ Condition: {{ product.condition }}
+📦 Availability: {{ product.availability }}
+📍 Overstock Outlet | Baltimore, MD
+#overstockoutlet #baltimore #baltimorefurniture #furnitureoutlet
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. FACEBOOK MARKETPLACE PREVIEW -->
+      <div class="tab-pane fade" id="mp-preview" role="tabpanel">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white mx-auto" style="max-width: 520px;">
+          <!-- Marketplace Image -->
+          <div class="ratio ratio-4x3 bg-light">
+            {% if product.images and product.images|length > 0 %}
+              <img src="{{ product.images[0].filepath }}" class="w-100 h-100 object-fit-cover" alt="mp image">
+            {% endif %}
+          </div>
+
+          <div class="p-3">
+            <div class="fs-4 fw-bold text-navy mb-1">${{ "%.2f"|format(product.price) }}</div>
+            <h5 class="fw-semibold text-dark mb-2">{{ product.title }}</h5>
+            <div class="text-muted fs-8 mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Listed in Baltimore, MD</div>
+
+            <div class="bg-light p-3 rounded-3 mb-3">
+              <span class="fw-bold fs-8 text-muted d-block mb-1">DETAILS</span>
+              <div class="fs-8 text-secondary">
+                <div>• Condition: <strong>{{ product.condition }}</strong></div>
+                <div>• Category: <strong>{{ product.category }}</strong></div>
+                <div>• Store: <strong>Overstock Outlet</strong></div>
+              </div>
+            </div>
+
+            <a href="/products/{{ product.id }}/marketplace-assistant" class="btn btn-navy text-white w-100 fw-bold py-2">
+              <i class="bi bi-shop me-1"></i> Launch Step-by-Step Marketplace Assistant
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
