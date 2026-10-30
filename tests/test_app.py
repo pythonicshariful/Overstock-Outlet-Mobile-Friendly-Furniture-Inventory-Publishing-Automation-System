@@ -153,3 +153,33 @@ def test_web_routes_accessibility():
     res_login = client.get("/login")
     assert res_login.status_code == 200
     assert "Overstock Outlet" in res_login.text
+
+    # Login as employee to get cookie
+    login_res = client.post("/api/auth/login", data={"username": "employee", "password": "overstock123"})
+    assert login_res.status_code == 200
+
+    # Test /products/new renders without 500 error
+    res_new = client.get("/products/new")
+    assert res_new.status_code == 200
+    assert "Product Photos" in res_new.text
+
+    # Test dashboard renders
+    res_dash = client.get("/dashboard")
+    assert res_dash.status_code == 200
+
+    # Test product detail, edit, preview, assistant
+    db = SessionLocal()
+    prod = db.query(Product).first()
+    db.close()
+    if prod:
+        res_detail = client.get(f"/products/{prod.id}")
+        assert res_detail.status_code == 200
+
+        res_edit = client.get(f"/products/{prod.id}/edit")
+        assert res_edit.status_code == 200
+
+        res_prev = client.get(f"/products/{prod.id}/preview")
+        assert res_prev.status_code == 200
+
+        res_assist = client.get(f"/products/{prod.id}/marketplace-assistant")
+        assert res_assist.status_code == 200
