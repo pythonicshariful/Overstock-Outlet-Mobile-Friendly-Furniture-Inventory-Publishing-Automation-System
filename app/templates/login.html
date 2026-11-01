@@ -33,23 +33,11 @@
             </div>
           </div>
 
-          <button type="submit" id="loginBtn" class="btn btn-navy w-100 btn-touch text-white bg-navy mb-3">
+          <button type="submit" id="loginBtn" class="btn btn-navy w-100 btn-touch text-white bg-navy">
             <span id="btnText">Sign In</span>
             <span id="btnSpinner" class="spinner-border spinner-border-sm d-none ms-2"></span>
           </button>
         </form>
-
-        <div class="card bg-light border-0 p-3 mt-3 rounded-3">
-          <div class="fw-bold fs-7 mb-2 text-navy">Quick Login (One-Click Demo):</div>
-          <div class="d-grid gap-2">
-            <button class="btn btn-outline-primary btn-sm py-2" onclick="fillAndLogin('employee', 'overstock123')">
-              <i class="bi bi-person me-1"></i> Floor Associate (employee)
-            </button>
-            <button class="btn btn-outline-dark btn-sm py-2" onclick="fillAndLogin('admin', 'admin123')">
-              <i class="bi bi-shield-lock me-1"></i> Store Manager (admin)
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -64,12 +52,6 @@ async function handleLoginSubmit(e) {
   const u = document.getElementById('username').value.trim();
   const p = document.getElementById('password').value;
   await performLogin(u, p);
-}
-
-function fillAndLogin(u, p) {
-  document.getElementById('username').value = u;
-  document.getElementById('password').value = p;
-  performLogin(u, p);
 }
 
 async function performLogin(username, password) {
@@ -114,4 +96,3 @@ async function performLogin(username, password) {
 }
 </script>
 {% endblock %}
-

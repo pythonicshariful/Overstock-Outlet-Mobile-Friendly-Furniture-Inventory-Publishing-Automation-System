@@ -7,7 +7,7 @@
   <div class="col-12 col-md-10 col-lg-8">
 
     <!-- Header -->
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
       <div class="d-flex align-items-center gap-2">
         <a href="/products/{{ product.id }}" class="btn btn-outline-secondary btn-sm rounded-circle" style="width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;">
           <i class="bi bi-arrow-left"></i>
@@ -17,9 +17,14 @@
           <span class="text-muted fs-8">Review how your listing appears to buyers</span>
         </div>
       </div>
-      <a href="/products/{{ product.id }}/marketplace-assistant" class="btn btn-warning btn-sm fw-bold">
-        <i class="bi bi-shop me-1"></i> Open Marketplace Guide
-      </a>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm fw-bold" onclick="openManualModal('fb')">
+          <i class="bi bi-book-half me-1"></i> 📖 Connect Manual
+        </button>
+        <a href="/products/{{ product.id }}/marketplace-assistant" class="btn btn-warning btn-sm fw-bold">
+          <i class="bi bi-shop me-1"></i> Open Marketplace Guide
+        </a>
+      </div>
     </div>
 
     <!-- Preview Navigation Tabs -->
@@ -151,6 +156,7 @@
           <div class="ratio ratio-4x3 bg-light">
             {% if product.images and product.images|length > 0 %}
               <img src="{{ product.images[0].filepath }}" class="w-100 h-100 object-fit-cover" alt="mp image">
+            </div>
             {% endif %}
           </div>
 
@@ -180,4 +186,3 @@
   </div>
 </div>
 {% endblock %}
-

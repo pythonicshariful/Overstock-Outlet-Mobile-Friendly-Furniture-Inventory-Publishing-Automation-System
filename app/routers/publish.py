@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.database import get_db
@@ -103,12 +103,11 @@ async def publish_product_to_platforms(
 
     # 3. Facebook Marketplace
     if "marketplace" in publish_req.platforms:
-        # Note: Handled via assisted workflow
         log = PublishLog(
             product_id=product.id,
             platform="marketplace",
             status="assisted",
-            post_url="https://www.facebook.com/marketplace",
+            post_url="https://www.facebook.com/marketplace/create/item",
             payload_summary=f"Marketplace guide initiated for {product.title}"
         )
         db.add(log)
@@ -119,8 +118,8 @@ async def publish_product_to_platforms(
             post_url="https://www.facebook.com/marketplace/create/item"
         ))
 
-    # If at least one platform succeeded or assisted, update product status to Published
-    if has_success or "marketplace" in publish_req.platforms:
+    # Update product status to Published only if at least one automated channel succeeded
+    if has_success:
         product.status = "Published"
         product.updated_at = datetime.utcnow()
 
@@ -131,7 +130,8 @@ async def publish_product_to_platforms(
 def get_marketplace_guide(
     product_id: int,
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_current_user)
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
@@ -161,6 +161,7 @@ def complete_marketplace_assisted_publish(
     )
     db.add(log)
     product.status = "Published"
+    product.updated_at = datetime.utcnow()
     db.commit()
 
     return {"message": "Marketplace listing recorded successfully!", "product_id": product.id}
@@ -208,6 +209,7 @@ async def retry_publishing_log(
             log.external_id = res.get("external_id")
             log.post_url = res.get("post_url")
             log.error_message = None
+            product.status = "Published"
         else:
             log.status = "failed"
             log.error_message = res.get("error")
@@ -218,11 +220,16 @@ async def retry_publishing_log(
             log.external_id = res.get("external_id")
             log.post_url = res.get("post_url")
             log.error_message = None
+            product.status = "Published"
         else:
             log.status = "failed"
             log.error_message = res.get("error")
 
     db.commit()
     db.refresh(log)
-    return {"status": log.status, "retries": log.retries, "message": f"Retry result: {log.status}"}
-
+    return {
+        "status": log.status,
+        "retries": log.retries,
+        "error": log.error_message,
+        "message": f"Retry result: {log.status}"
+    }

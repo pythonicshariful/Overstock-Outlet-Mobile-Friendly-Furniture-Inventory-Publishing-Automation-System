@@ -31,8 +31,8 @@ Switch to the **"Publishing Activity & Retries"** tab:
 - **Status Indicators:**
   - `Success`: Post is live online. Click the "View" icon to open the post directly.
   - `Assisted`: Completed through the Marketplace guided workflow.
-  - `Failed`: Graph API or network error occurred.
-- **One-Click Retry:** If a post failed (e.g. temporary network glitch or expired session), click the yellow **"Retry"** button. The system will immediately attempt to re-publish the item.
+  - `Failed`: Graph API error or missing credentials.
+- **One-Click Retry:** If a post failed (e.g. temporary network glitch or after updating API credentials), click the yellow **"Retry"** button. The system will immediately attempt to re-publish the item.
 
 ---
 
@@ -52,12 +52,12 @@ Switch to the **"Publishing Activity & Retries"** tab:
 4. Generate a **Never-Expiring Page Access Token**:
    - In Graph API Explorer, select your App and get User Token with `pages_manage_posts` and `pages_read_engagement`.
    - Exchange the short-lived token for a long-lived Page Token via `https://graph.facebook.com/{version}/oauth/access_token?grant_type=fb_exchange_token...`.
-5. Enter your credentials in the Admin Dashboard or `.env` file:
+5. Enter your credentials in the **Admin Dashboard > Social Media & API Settings** tab (and click **Save Settings**) or in the `.env` file:
    - `FB_PAGE_ID` (Found in Page About section)
    - `FB_PAGE_ACCESS_TOKEN` (Long-lived token)
    - `IG_USER_ID` (Linked Instagram Business ID)
-   - Set `MOCK_SOCIAL_PUBLISHING=false` to enable live transmission.
-6. Click **"Test Connection"** in the Admin Dashboard to verify status!
+   - `STORE_PHONE` & `STORE_HOURS`
+6. Click **"Test Connection"** in the Admin Dashboard to verify live connectivity!
 
 ---
 
@@ -67,4 +67,3 @@ The SQLite database is stored locally at `overstock.db`.
 - **Daily Backup:** Copy `overstock.db` to a backup drive or cloud folder.
 - **Photos:** The `uploads/` folder contains all original and thumbnail photos. Include this folder in your regular backups.
 - **PostgreSQL Upgrade:** To upgrade from SQLite to PostgreSQL for high-concurrency environments, set `DATABASE_URL=postgresql://user:pass@host:5432/dbname` in `.env`.
-

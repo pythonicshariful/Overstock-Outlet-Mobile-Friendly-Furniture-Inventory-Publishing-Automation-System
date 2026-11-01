@@ -25,6 +25,12 @@
       </a>
 
       <div class="d-flex align-items-center gap-2">
+        <!-- Global User Manual & Connection Guide Trigger -->
+        <button type="button" class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1 fw-semibold" onclick="openManualModal('fb')" title="Step-by-Step User Manual & Setup Guide">
+          <i class="bi bi-book-half"></i>
+          <span class="d-none d-sm-inline">User Manual & Connect Guide</span>
+        </button>
+
         {% if user %}
           <div class="dropdown">
             <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown">
@@ -35,10 +41,14 @@
             <ul class="dropdown-menu dropdown-menu-end shadow">
               <li><h6 class="dropdown-header">Logged in as {{ user.username }}</h6></li>
               {% if user.role == "admin" %}
-                <li><a class="dropdown-item" href="/admin"><i class="bi bi-shield-lock me-2"></i>Admin Dashboard</a></li>
+                <li><a class="dropdown-item" href="/admin"><i class="bi bi-shield-lock me-2"></i>Admin Control Center</a></li>
+                <li><a class="dropdown-item" href="/admin?tab=settings"><i class="bi bi-facebook text-primary me-2"></i>Connect FB & Instagram</a></li>
+                <li><a class="dropdown-item" href="/admin?tab=ai"><i class="bi bi-stars text-warning me-2"></i>Connect AI Providers</a></li>
+                <li><hr class="dropdown-divider"></li>
               {% endif %}
               <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-grid me-2"></i>Inventory</a></li>
               <li><a class="dropdown-item" href="/products/new"><i class="bi bi-plus-circle me-2"></i>Add Product</a></li>
+              <li><a class="dropdown-item" href="javascript:void(0)" onclick="openManualModal('fb')"><i class="bi bi-book me-2"></i>User Manual & Guides</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="handleLogout()"><i class="bi bi-box-arrow-right me-2"></i>Log Out</a></li>
             </ul>
@@ -74,13 +84,194 @@
           <span class="fs-8">Admin</span>
         </a>
       {% else %}
-        <a href="/dashboard?status=Published" class="nav-link text-secondary py-1">
-          <i class="bi bi-send-check fs-5 d-block"></i>
-          <span class="fs-8">Published</span>
+        <a href="javascript:void(0)" onclick="openManualModal('staff')" class="nav-link text-secondary py-1">
+          <i class="bi bi-book fs-5 d-block"></i>
+          <span class="fs-8">Manual</span>
         </a>
       {% endif %}
     </div>
   </nav>
+
+  <!-- Interactive Step-by-Step User Manual & Connection Guide Modal -->
+  <div class="modal fade" id="globalManualModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-header bg-navy text-white">
+          <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+            <i class="bi bi-book-half text-warning"></i>
+            <span>Interactive User Manual & 1-Click Connection Guide</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-3 p-md-4">
+
+          <!-- Manual Navigation Pills -->
+          <ul class="nav nav-pills nav-fill bg-light p-1 rounded-3 mb-3 gap-1" id="manualTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active fw-bold fs-8 py-2" id="manual-fb-tab" data-bs-toggle="pill" data-bs-target="#manual-fb" type="button">
+                <i class="bi bi-facebook me-1"></i>1. Connect FB & IG
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link fw-bold fs-8 py-2" id="manual-ai-tab" data-bs-toggle="pill" data-bs-target="#manual-ai" type="button">
+                <i class="bi bi-stars me-1"></i>2. Connect AI Clients
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link fw-bold fs-8 py-2" id="manual-mp-tab" data-bs-toggle="pill" data-bs-target="#manual-mp" type="button">
+                <i class="bi bi-shop me-1"></i>3. Marketplace Guide
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link fw-bold fs-8 py-2" id="manual-staff-tab" data-bs-toggle="pill" data-bs-target="#manual-staff" type="button">
+                <i class="bi bi-phone me-1"></i>4. Staff Daily Guide
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content">
+            <!-- TAB 1: FACEBOOK & INSTAGRAM CONNECTION GUIDE -->
+            <div class="tab-pane fade show active" id="manual-fb" role="tabpanel">
+              <div class="alert alert-success border-0 rounded-3 small mb-3">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                <strong>Zero <code>.env</code> Files Needed!</strong> All Facebook Page and Instagram Business connections are done 100% from the Web UI and saved directly in the database.
+              </div>
+
+              <h6 class="fw-bold text-navy mb-2">Step-by-Step: Connect Facebook Page (and Optional Instagram) in 2 Minutes</h6>
+              <ol class="small text-secondary ps-3 mb-3">
+                <li class="mb-2">
+                  <strong>Facebook-Only vs. Facebook + Instagram:</strong><br>
+                  If your Instagram is not linked yet, the system automatically connects <strong>Facebook Only</strong>! To also connect Instagram, follow the <em>"How to Connect Instagram with Facebook"</em> box below at any time.
+                </li>
+                <li class="mb-2">
+                  <strong>Create or Open a Meta Business App:</strong><br>
+                  Click <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener" class="fw-bold">Meta for Developers &rarr; My Apps <i class="bi bi-box-arrow-up-right"></i></a>, click <strong>Create App</strong> &rarr; <strong>Other</strong> &rarr; <strong>Business</strong>.
+                </li>
+                <li class="mb-2">
+                  <strong>Open Graph API Explorer to Generate a Token:</strong><br>
+                  Click <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener" class="fw-bold">Meta Graph API Explorer <i class="bi bi-box-arrow-up-right"></i></a>. In the right sidebar:
+                  <ul class="mt-1">
+                    <li>Select your <strong>Meta App</strong>.</li>
+                    <li>Under <strong>User or Page</strong>, select <strong>Get Page Access Token</strong> (or User Token).</li>
+                    <li>Add these permissions (click any badge to copy):
+                      <div class="d-flex flex-wrap gap-1 mt-1">
+                        <span class="badge bg-light text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('pages_manage_posts', null)">pages_manage_posts</span>
+                        <span class="badge bg-light text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('pages_read_engagement', null)">pages_read_engagement</span>
+                        <span class="badge bg-light text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('pages_show_list', null)">pages_show_list</span>
+                        <span class="badge bg-light text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('business_management', null)">business_management</span>
+                        <span class="badge bg-light text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('instagram_basic', null)">instagram_basic</span>
+                        <span class="badge bg-light text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('instagram_content_publish', null)">instagram_content_publish</span>
+                      </div>
+                    </li>
+                    <li class="mt-1">Click <strong>Generate Access Token</strong>, approve the popup for your Facebook Page, and copy the token.</li>
+                  </ul>
+                </li>
+                <li class="mb-2">
+                  <strong>Paste into Our 1-Click Auto-Connect Wizard:</strong><br>
+                  Go to <a href="/admin?tab=settings" class="fw-bold">Admin Control Center &rarr; Connect FB &amp; Instagram</a>, paste the token into the <strong>1-Click Auto-Connect</strong> box, and click <strong>"Auto-Discover &amp; Connect"</strong>!
+                  <br><em>The system will automatically connect your Facebook Page (and Instagram if linked; if Instagram is not linked yet, it connects Facebook-only!).</em>
+                </li>
+              </ol>
+
+              <div class="p-3 bg-light rounded-3 border small mb-3">
+                <div class="fw-bold text-navy mb-1"><i class="bi bi-instagram text-danger me-1"></i>How to Connect Instagram with Your Facebook Page</div>
+                <ol class="ps-3 mb-0 text-secondary">
+                  <li class="mb-1"><strong>Switch Instagram to a Professional/Business Account:</strong> Open the Instagram app on your phone &rarr; <strong>Profile &gt; Settings and activity &gt; Account type and tools &gt; Switch to professional account</strong> &rarr; choose <strong>Business</strong>.</li>
+                  <li class="mb-1"><strong>Link Instagram Inside Your Facebook Page:</strong> Open your Facebook Page on a computer &rarr; click <strong>Switch Now</strong> into the Page profile &rarr; go to <strong>Settings &gt; Linked Accounts &gt; Instagram</strong> &rarr; click <strong>Connect Account</strong> and log in with your Instagram username and password.</li>
+                  <li class="mb-0"><strong>Re-Run 1-Click Auto-Discover:</strong> Return to <a href="/admin?tab=settings" class="fw-bold">Admin &rarr; Connect FB &amp; IG</a>, paste a fresh token from Graph API Explorer, and click <strong>Auto-Discover &amp; Connect</strong>. Both Facebook and Instagram will be linked!</li>
+                </ol>
+              </div>
+
+              {% if user and user.role == 'admin' %}
+                <a href="/admin?tab=settings" class="btn btn-primary w-100 fw-bold">
+                  <i class="bi bi-magic me-1"></i> Open Facebook &amp; Instagram Auto-Connect in Admin UI
+                </a>
+              {% endif %}
+            </div>
+
+            <!-- TAB 2: AI PROVIDERS MANUAL -->
+            <div class="tab-pane fade" id="manual-ai" role="tabpanel">
+              <h6 class="fw-bold text-navy mb-2">How to Connect Multiple AI Clients from the UI</h6>
+              <p class="small text-muted mb-3">
+                You can configure any or all of the 4 supported cloud AI providers below (plus the built-in <strong>Smart Retail Copy Engine</strong> which works out-of-the-box with zero API keys).
+              </p>
+
+              <div class="list-group mb-3 small">
+                <div class="list-group-item">
+                  <div class="fw-bold text-navy"><i class="bi bi-google text-primary me-1"></i> 1. Google Gemini (Recommended – Free Tier Available + Photo Vision)</div>
+                  <ol class="mb-0 ps-3 mt-1 text-secondary">
+                    <li>Open <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="fw-bold">Google AI Studio API Keys <i class="bi bi-box-arrow-up-right"></i></a> and sign in with Google.</li>
+                    <li>Click <strong>"Create API Key"</strong> and copy the key starting with <code>AIza...</code>.</li>
+                    <li>Paste into <strong>Admin &rarr; AI Copywriting &amp; Models &rarr; Gemini API Key</strong> and click <strong>Save AI Settings</strong>.</li>
+                  </ol>
+                </div>
+                <div class="list-group-item">
+                  <div class="fw-bold text-navy"><i class="bi bi-cpu text-success me-1"></i> 2. OpenAI GPT-4o / GPT-4o-mini (Photo Vision + Text)</div>
+                  <ol class="mb-0 ps-3 mt-1 text-secondary">
+                    <li>Open <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="fw-bold">OpenAI Platform API Keys <i class="bi bi-box-arrow-up-right"></i></a>.</li>
+                    <li>Click <strong>"Create new secret key"</strong> and copy the key starting with <code>sk-...</code>.</li>
+                    <li>Paste into <strong>Admin &rarr; AI Copywriting &amp; Models &rarr; OpenAI API Key</strong> and click <strong>Save AI Settings</strong>.</li>
+                  </ol>
+                </div>
+                <div class="list-group-item">
+                  <div class="fw-bold text-navy"><i class="bi bi-chat-square-quote text-warning me-1"></i> 3. Anthropic Claude (Photo Vision + Text)</div>
+                  <ol class="mb-0 ps-3 mt-1 text-secondary">
+                    <li>Open <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="fw-bold">Anthropic Console Keys <i class="bi bi-box-arrow-up-right"></i></a>.</li>
+                    <li>Click <strong>"Create Key"</strong> and copy the key starting with <code>sk-ant-...</code>.</li>
+                    <li>Paste into <strong>Admin &rarr; AI Copywriting &amp; Models &rarr; Anthropic API Key</strong> and click <strong>Save AI Settings</strong>.</li>
+                  </ol>
+                </div>
+                <div class="list-group-item">
+                  <div class="fw-bold text-navy"><i class="bi bi-lightning-fill text-danger me-1"></i> 4. Groq Cloud (Ultra-Fast Llama Text)</div>
+                  <ol class="mb-0 ps-3 mt-1 text-secondary">
+                    <li>Open <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="fw-bold">Groq Cloud API Keys <i class="bi bi-box-arrow-up-right"></i></a>.</li>
+                    <li>Click <strong>"Create API Key"</strong> and copy the key starting with <code>gsk_...</code>.</li>
+                    <li>Paste into <strong>Admin &rarr; AI Copywriting &amp; Models &rarr; Groq API Key</strong> and click <strong>Save AI Settings</strong>.</li>
+                  </ol>
+                </div>
+              </div>
+
+              {% if user and user.role == 'admin' %}
+                <a href="/admin?tab=ai" class="btn btn-navy text-white w-100 fw-bold">
+                  <i class="bi bi-stars me-1 text-warning"></i> Open AI Control Center in Admin UI
+                </a>
+              {% endif %}
+            </div>
+
+            <!-- TAB 3: MARKETPLACE ASSISTED PUBLISHING GUIDE -->
+            <div class="tab-pane fade" id="manual-mp" role="tabpanel">
+              <h6 class="fw-bold text-navy mb-2">How to Post to Facebook Marketplace in 30 Seconds</h6>
+              <p class="small text-muted">
+                Because Meta blocks automated bots on personal/consumer Marketplace feeds, our <strong>Marketplace Publishing Assistant</strong> prepares everything for a 1-tap copy-and-paste workflow:
+              </p>
+              <ol class="small text-secondary ps-3">
+                <li class="mb-2">On any product card, tap <strong>"Marketplace"</strong> (or check <em>Facebook Marketplace</em> when saving a new product).</li>
+                <li class="mb-2">Tap <strong>"1. Open Facebook Marketplace"</strong> to open Facebook's item listing screen.</li>
+                <li class="mb-2">Tap <strong>"Copy Title"</strong>, <strong>"Copy Price"</strong>, and <strong>"Copy Description"</strong> to paste optimized retail copy with 1 tap.</li>
+                <li class="mb-2">Upload the numbered product photos in order and tap Publish on Facebook.</li>
+                <li class="mb-2">Tap <strong>"Mark as Published on Marketplace"</strong> to record the listing in your store log!</li>
+              </ol>
+            </div>
+
+            <!-- TAB 4: FLOOR ASSOCIATE DAILY WORKFLOW -->
+            <div class="tab-pane fade" id="manual-staff" role="tabpanel">
+              <h6 class="fw-bold text-navy mb-2">Floor Associate 60-Second Mobile Workflow</h6>
+              <ol class="small text-secondary ps-3">
+                <li class="mb-2"><strong>Snap Photos:</strong> Tap <strong>"Add New Product"</strong> &rarr; <strong>"Open Camera"</strong> and snap 1–4 photos of the furniture piece.</li>
+                <li class="mb-2"><strong>Enter Specs:</strong> Type the Title, Outlet Price, Retail Price (optional), Category, and Condition.</li>
+                <li class="mb-2"><strong>Auto-Generate Description:</strong> Choose your AI engine (or leave on <em>Auto</em>) and tap <strong>🪄 Auto-Generate</strong>. If you snapped a photo, Vision AI will inspect the furniture photo automatically!</li>
+                <li class="mb-2"><strong>Save &amp; Publish:</strong> Toggle on Facebook Page, Instagram, and/or Marketplace, and tap <strong>Save &amp; Publish</strong>.</li>
+              </ol>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close Manual</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Global Toast Notifications Container -->
   <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
@@ -99,7 +290,18 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- App JS -->
   <script src="/static/js/app.js"></script>
+  <script>
+    function openManualModal(tabKey = 'fb') {
+      const modalEl = document.getElementById('globalManualModal');
+      if (!modalEl) return;
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      const tabBtn = document.getElementById(`manual-${tabKey}-tab`);
+      if (tabBtn) {
+        bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+      }
+    }
+  </script>
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>
-

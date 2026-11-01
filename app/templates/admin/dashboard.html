@@ -4,14 +4,19 @@
 
 {% block content %}
 <div class="row g-3 mb-4">
-  <div class="col-12 d-flex align-items-center justify-content-between">
+  <div class="col-12 d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div>
-      <h3 class="fw-bold text-navy mb-0"><i class="bi bi-shield-check text-warning me-2"></i>Admin Dashboard</h3>
-      <p class="text-muted small mb-0">System health, accounts, and publishing monitor</p>
+      <h3 class="fw-bold text-navy mb-0"><i class="bi bi-shield-check text-warning me-2"></i>Admin Control Center</h3>
+      <p class="text-muted small mb-0">100% UI-Driven Configuration • Zero <code>.env</code> Required</p>
     </div>
-    <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-grid me-1"></i> View Inventory
-    </a>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-primary btn-sm fw-semibold" onclick="openManualModal('fb')">
+        <i class="bi bi-book-half me-1"></i> Full Setup Manual
+      </button>
+      <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-grid me-1"></i> View Inventory
+      </a>
+    </div>
   </div>
 </div>
 
@@ -74,21 +79,26 @@
   </div>
 </div>
 
-<!-- TABS: 1. PUBLISHING LOGS & RETRY, 2. USER MANAGEMENT, 3. SOCIAL MEDIA SETTINGS -->
+<!-- TABS: 1. PUBLISHING LOGS, 2. USER MANAGEMENT, 3. FACEBOOK & INSTAGRAM CONNECT, 4. AI COPYWRITING -->
 <ul class="nav nav-tabs border-bottom mb-3" id="adminTabs" role="tablist">
   <li class="nav-item">
     <button class="nav-link active fw-bold" id="logs-tab" data-bs-toggle="tab" data-bs-target="#tab-logs" type="button">
-      <i class="bi bi-broadcast me-1"></i> Publishing Activity & Retries
-    </button>
-  </li>
-  <li class="nav-item">
-    <button class="nav-link fw-bold" id="users-tab" data-bs-toggle="tab" data-bs-target="#tab-users" type="button">
-      <i class="bi bi-people me-1"></i> Employee Accounts ({{ users|length }})
+      <i class="bi bi-broadcast me-1"></i> Publishing Activity
     </button>
   </li>
   <li class="nav-item">
     <button class="nav-link fw-bold" id="settings-tab" data-bs-toggle="tab" data-bs-target="#tab-settings" type="button">
-      <i class="bi bi-gear me-1"></i> Social Media & API Settings
+      <i class="bi bi-facebook text-primary me-1"></i> Connect Facebook &amp; Instagram
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-bold" id="ai-tab" data-bs-toggle="tab" data-bs-target="#tab-ai" type="button">
+      <i class="bi bi-stars me-1 text-warning"></i> Connect AI Clients
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link fw-bold" id="users-tab" data-bs-toggle="tab" data-bs-target="#tab-users" type="button">
+      <i class="bi bi-people me-1"></i> Staff Accounts ({{ users|length }})
     </button>
   </li>
 </ul>
@@ -159,7 +169,7 @@
                           <i class="bi bi-box-arrow-up-right"></i> View
                         </a>
                       {% elif log.status == 'failed' %}
-                        <button class="btn btn-warning btn-sm py-1 px-2 fw-semibold" onclick="retryPublishLog({{ log.id }})">
+                        <button class="btn btn-warning btn-sm py-1 px-2 fw-semibold" onclick="retryPublishLog('{{ log.id }}')">
                           <i class="bi bi-arrow-clockwise me-1"></i> Retry
                         </button>
                       {% endif %}
@@ -182,7 +192,6 @@
   <!-- TAB 2: USER MANAGEMENT -->
   <div class="tab-pane fade" id="tab-users">
     <div class="row g-3">
-      <!-- User List -->
       <div class="col-12 col-md-7">
         <div class="card border-0 shadow-sm rounded-3">
           <div class="card-header bg-white py-3 border-bottom">
@@ -220,7 +229,7 @@
                       </td>
                       <td>
                         {% if u.username != 'admin' %}
-                          <button class="btn btn-outline-secondary btn-sm py-1 px-2" onclick="toggleUserActive({{ u.id }}, {{ 'false' if u.is_active else 'true' }})">
+                          <button class="btn btn-outline-secondary btn-sm py-1 px-2" onclick="toggleUserActive('{{ u.id }}', '{{ 'false' if u.is_active else 'true' }}' === 'true')">
                             {{ 'Disable' if u.is_active else 'Activate' }}
                           </button>
                         {% endif %}
@@ -234,7 +243,6 @@
         </div>
       </div>
 
-      <!-- Add New User Form -->
       <div class="col-12 col-md-5">
         <div class="card border-0 shadow-sm rounded-3">
           <div class="card-header bg-white py-3 border-bottom">
@@ -273,47 +281,429 @@
     </div>
   </div>
 
-  <!-- TAB 3: SOCIAL MEDIA SETTINGS -->
+  <!-- TAB 3: FACEBOOK & INSTAGRAM UI CONNECT (NO .ENV NEEDED) -->
   <div class="tab-pane fade" id="tab-settings">
     <div class="row g-3">
-      <div class="col-12 col-md-8">
-        <div class="card border-0 shadow-sm rounded-3 mb-3">
-          <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
-            <h6 class="fw-bold text-navy mb-0">Meta Graph API Configuration</h6>
-            <button class="btn btn-outline-primary btn-sm" onclick="testSocialConnections()">
-              <i class="bi bi-shield-check me-1"></i> Test Connection
-            </button>
+      <div class="col-12 col-lg-10">
+
+        <!-- Live Connection Status Bar -->
+        <div class="card border-0 shadow-sm rounded-3 mb-3 bg-white">
+          <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex flex-wrap align-items-center gap-3">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-facebook fs-4 text-primary"></i>
+                <div>
+                  <div class="fs-8 text-muted fw-bold">FACEBOOK PAGE</div>
+                  {% if settings.FB_PAGE_ID and settings.FB_PAGE_ACCESS_TOKEN %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Connected (ID: {{ settings.FB_PAGE_ID }})</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Not Connected Yet</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="vr d-none d-sm-block"></div>
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-instagram fs-4 text-danger"></i>
+                <div>
+                  <div class="fs-8 text-muted fw-bold">INSTAGRAM BUSINESS</div>
+                  {% if settings.IG_USER_ID and settings.FB_PAGE_ACCESS_TOKEN %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Connected (ID: {{ settings.IG_USER_ID }})</span>
+                  {% elif settings.FB_PAGE_ID and settings.FB_PAGE_ACCESS_TOKEN %}
+                    <span class="badge bg-info text-dark"><i class="bi bi-check2 me-1"></i>Optional (Facebook-Only Active)</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Optional / Not Linked</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-navy btn-sm fw-semibold" data-bs-toggle="collapse" data-bs-target="#fbInlineManual">
+                <i class="bi bi-book me-1 text-warning"></i> Step-by-Step User Manual
+              </button>
+              <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="testSocialConnections()">
+                <i class="bi bi-shield-check me-1"></i> Verify Live Connection
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="testConnectionResult" class="alert d-none mb-3"></div>
+
+        <!-- COLLAPSIBLE INLINE STEP-BY-STEP USER MANUAL FOR FACEBOOK & INSTAGRAM -->
+        <div class="collapse mb-3" id="fbInlineManual">
+          <div class="card border-primary shadow-sm rounded-3 bg-white">
+            <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+              <span class="fw-bold"><i class="bi bi-book-half me-2"></i>User Manual: How Anyone Can Connect Facebook &amp; Instagram in 2 Minutes</span>
+              <button type="button" class="btn-close btn-close-white btn-sm" data-bs-toggle="collapse" data-bs-target="#fbInlineManual"></button>
+            </div>
+            <div class="card-body p-3 small">
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <div class="p-2 bg-light rounded-3 h-100">
+                    <div class="fw-bold text-navy mb-1">Method A: 1-Click Auto-Discover via Token (Fastest)</div>
+                    <ol class="ps-3 mb-0 text-secondary">
+                      <li class="mb-1">Open <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener" class="fw-bold">Meta Graph API Explorer <i class="bi bi-box-arrow-up-right"></i></a>.</li>
+                      <li class="mb-1">Select your Meta Business App in the top-right dropdown.</li>
+                      <li class="mb-1">Under <strong>User or Page</strong>, pick <strong>Get Page Access Token</strong> and check these permissions (click to copy):
+                        <div class="d-flex flex-wrap gap-1 my-1">
+                          <span class="badge bg-white text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('pages_manage_posts', null)">pages_manage_posts</span>
+                          <span class="badge bg-white text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('pages_read_engagement', null)">pages_read_engagement</span>
+                          <span class="badge bg-white text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('pages_show_list', null)">pages_show_list</span>
+                          <span class="badge bg-white text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('business_management', null)">business_management</span>
+                          <span class="badge bg-white text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('instagram_basic', null)">instagram_basic</span>
+                          <span class="badge bg-white text-dark border font-monospace" style="cursor:pointer;" onclick="copyToClipboard('instagram_content_publish', null)">instagram_content_publish</span>
+                        </div>
+                      </li>
+                      <li class="mb-1">Click <strong>Generate Access Token</strong>, select your Facebook Page, and copy the token.</li>
+                      <li>Paste the token below and click <strong>"Auto-Discover &amp; Connect"</strong>! <em>(If Instagram is not linked yet, it automatically connects <strong>Facebook Only</strong>!)</em></li>
+                    </ol>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="p-2 bg-light rounded-3 h-100">
+                    <div class="fw-bold text-navy mb-1">How to Link Instagram with Your Facebook Page (Optional)</div>
+                    <ol class="ps-3 mb-2 text-secondary">
+                      <li class="mb-1"><strong>Switch Instagram to Business:</strong> Open the Instagram mobile app &rarr; <strong>Profile &gt; Edit Profile &gt; Switch to Professional Account</strong> &rarr; select <strong>Business</strong>.</li>
+                      <li class="mb-1"><strong>Link to Your Facebook Page:</strong> Open your Facebook Page on desktop &rarr; click <strong>Manage / Settings</strong> &rarr; <strong>Linked Accounts</strong> &rarr; <strong>Instagram</strong> &rarr; click <strong>Connect Account</strong> and log in to Instagram.</li>
+                      <li class="mb-0"><strong>Re-Run Auto-Discover:</strong> Once linked, paste your token below and click <strong>Auto-Discover &amp; Connect</strong>—both Facebook and Instagram will connect automatically!</li>
+                    </ol>
+                    <div class="border-top pt-2 mt-1">
+                      <span class="fw-bold text-navy d-block">OAuth Redirect URI (For Method B Login Button):</span>
+                      <code class="bg-white border px-2 py-1 rounded d-inline-block mt-1" style="cursor:pointer;" onclick="copyToClipboard(window.location.origin + '/api/admin/oauth/facebook/callback', null)">
+                        <script>document.write(window.location.origin + '/api/admin/oauth/facebook/callback');</script>
+                      </code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 1: 1-CLICK AUTO-DISCOVER & OAUTH WIZARD -->
+        <div class="card border-0 shadow-sm rounded-3 mb-3 border-start border-4 border-primary">
+          <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <h6 class="fw-bold text-navy mb-0"><i class="bi bi-magic text-warning me-2"></i>1-Click Facebook Page &amp; Instagram Auto-Connect Wizard</h6>
+              <span class="text-muted fs-8">Automatically discovers your Facebook Page ID, Permanent Page Token, and linked Instagram Business ID</span>
+            </div>
+            <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Open Meta Token Generator
+            </a>
           </div>
           <div class="card-body p-3">
-            <div id="testConnectionResult" class="alert d-none mb-3"></div>
-
-            <div class="mb-3">
-              <label class="form-label fw-bold">Overstock Outlet Facebook Page URL</label>
-              <input type="text" class="form-control" value="https://www.facebook.com/overstockoutletbmore" readonly>
+            <div class="row g-2 mb-3">
+              <div class="col-12 col-sm-6">
+                <label class="form-label fs-8 fw-bold mb-1">Meta App ID <span class="text-muted fw-normal">(Optional – 15-digit numeric ID from Meta App)</span></label>
+                <input type="text" id="wizardAppId" name="meta_numeric_app_id" autocomplete="off" spellcheck="false" class="form-control form-control-sm font-monospace" placeholder="e.g. 227481920192834 (auto-detected from token)" value="{{ settings.META_APP_ID if settings.META_APP_ID and settings.META_APP_ID.isdigit() else '' }}">
+              </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label fs-8 fw-bold mb-1">Meta App Secret <span class="text-muted fw-normal">(Optional – converts token to Never-Expiring)</span></label>
+                <input type="text" id="wizardAppSecret" name="meta_hex_app_secret" autocomplete="off" spellcheck="false" style="-webkit-text-security: disc;" class="form-control form-control-sm font-monospace" placeholder="32-char App Secret from Meta Basic Settings" value="{{ settings.META_APP_SECRET if settings.META_APP_ID and settings.META_APP_ID.isdigit() else '' }}">
+              </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label fw-bold">Facebook Page ID</label>
-              <input type="text" id="fbPageId" class="form-control" placeholder="e.g. 102938482019" value="{{ settings.FB_PAGE_ID }}">
-              <div class="form-text">Found in Facebook Page Settings > About > Page ID.</div>
+              <label class="form-label fs-8 fw-bold mb-1">Paste Meta Access Token (User Token or Page Token)</label>
+              <div class="input-group">
+                <input type="text" id="wizardAccessToken" name="meta_graph_token" autocomplete="off" spellcheck="false" class="form-control font-monospace fs-8" placeholder="Paste EAA... token from Graph API Explorer here">
+                <button type="button" id="autoDiscoverBtn" class="btn btn-warning fw-bold" onclick="runAutoDiscover()">
+                  <i class="bi bi-lightning-charge-fill me-1"></i> Auto-Discover &amp; Connect FB + IG
+                </button>
+              </div>
+              <div class="form-text fs-8">
+                Paste any token with Page &amp; Instagram permissions—our system will automatically find your Page ID, permanent Page token, and Instagram Business ID and save them!
+              </div>
             </div>
 
-            <div class="mb-3">
-              <label class="form-label fw-bold">Facebook Page Access Token</label>
-              <textarea id="fbPageToken" rows="2" class="form-control font-monospace fs-8" placeholder="EAAB...">{{ settings.FB_PAGE_ACCESS_TOKEN }}</textarea>
-              <div class="form-text">Generate in Meta Developer Portal (Graph API Explorer) with <code>pages_manage_posts</code> permission.</div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-2 border-top">
+              <span class="fs-8 text-muted">Have Meta App ID &amp; Secret entered above? You can also authorize directly via browser redirect:</span>
+              <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="startFacebookOAuth()">
+                <i class="bi bi-facebook me-1"></i> Connect with Facebook Login (OAuth)
+              </button>
             </div>
+          </div>
+        </div>
 
-            <div class="mb-3">
-              <label class="form-label fw-bold">Instagram Business Account User ID</label>
-              <input type="text" id="igUserId" class="form-control" placeholder="e.g. 17841400000000000" value="{{ settings.IG_USER_ID }}">
-              <div class="form-text">Instagram Business account linked to the Overstock Outlet Facebook Page.</div>
-            </div>
+        <!-- CARD 2: DIRECT UI CREDENTIALS & STORE DETAILS (SAVED IN DATABASE) -->
+        <div class="card border-0 shadow-sm rounded-3 mb-3">
+          <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+            <h6 class="fw-bold text-navy mb-0"><i class="bi bi-sliders text-warning me-2"></i>Saved Social IDs &amp; Store Details (Editable in UI)</h6>
+            <span class="badge bg-light text-secondary border">Persisted in Database</span>
+          </div>
+          <div class="card-body p-3">
+            <form id="socialSettingsForm" onsubmit="saveSocialSettings(event)">
+              <div class="row g-2 mb-3">
+                <div class="col-12 col-sm-6">
+                  <label class="form-label fw-bold fs-8">Facebook Page ID</label>
+                  <input type="text" id="fbPageId" class="form-control form-control-sm" placeholder="Auto-filled or enter Page ID" value="{{ settings.FB_PAGE_ID }}">
+                </div>
+                <div class="col-12 col-sm-6">
+                  <label class="form-label fw-bold fs-8">Instagram Business Account User ID</label>
+                  <input type="text" id="igUserId" class="form-control form-control-sm" placeholder="Auto-filled or enter IG Business ID" value="{{ settings.IG_USER_ID }}">
+                </div>
+              </div>
 
-            <div class="alert alert-info border-0 rounded-3 small">
-              <strong><i class="bi bi-lightbulb-fill me-1"></i>Simulation / Development Mode:</strong><br>
-              When running locally without live Meta Graph API tokens, the system gracefully operates in Simulation Mode, generating valid realistic post IDs and preview URLs so staff can test all publishing flows immediately.
+              <div class="mb-3">
+                <label class="form-label fw-bold fs-8">Facebook Page Permanent Access Token</label>
+                <textarea id="fbPageToken" rows="2" class="form-control font-monospace fs-8" placeholder="Auto-filled by wizard above or paste EAAB...">{{ settings.FB_PAGE_ACCESS_TOKEN }}</textarea>
+              </div>
+
+              <hr>
+              <h6 class="fw-bold text-navy mb-2">Store Contact &amp; Location Info (Included in Post Captions)</h6>
+
+              <div class="row g-2 mb-2">
+                <div class="col-12 col-sm-6">
+                  <label class="form-label fw-bold fs-8">Store Name</label>
+                  <input type="text" id="storeName" class="form-control form-control-sm" value="{{ settings.STORE_NAME }}">
+                </div>
+                <div class="col-12 col-sm-6">
+                  <label class="form-label fw-bold fs-8">Store Location</label>
+                  <input type="text" id="storeLocation" class="form-control form-control-sm" value="{{ settings.STORE_LOCATION }}">
+                </div>
+              </div>
+
+              <div class="row g-2 mb-3">
+                <div class="col-12 col-sm-4">
+                  <label class="form-label fw-bold fs-8">Store Contact Phone</label>
+                  <input type="text" id="storePhone" class="form-control form-control-sm" placeholder="e.g. (410) XXX-XXXX" value="{{ settings.STORE_PHONE }}">
+                </div>
+                <div class="col-12 col-sm-4">
+                  <label class="form-label fw-bold fs-8">Store Operating Hours</label>
+                  <input type="text" id="storeHours" class="form-control form-control-sm" placeholder="Mon-Sat: 10AM - 7PM, Sun: 11AM - 5PM" value="{{ settings.STORE_HOURS }}">
+                </div>
+                <div class="col-12 col-sm-4">
+                  <label class="form-label fw-bold fs-8">Official Facebook Page URL</label>
+                  <input type="text" id="storeFbUrl" class="form-control form-control-sm" value="{{ settings.STORE_FACEBOOK_PAGE_URL }}">
+                </div>
+              </div>
+
+              <button type="submit" id="saveSettingsBtn" class="btn btn-navy text-white fw-bold px-4">
+                <i class="bi bi-save me-1"></i> Save All Social &amp; Store Settings
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: MULTI-PROVIDER AI COPYWRITING & VISION (WITH INLINE USER MANUALS) -->
+  <div class="tab-pane fade" id="tab-ai">
+    <div class="row g-3">
+      <div class="col-12 col-lg-10">
+        <div class="card border-0 shadow-sm rounded-3 mb-3">
+          <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <h6 class="fw-bold text-navy mb-0"><i class="bi bi-stars text-warning me-2"></i>Multi-Client AI Copywriting &amp; Vision Control Center</h6>
+              <span class="text-muted fs-8">Click "How to Connect" on any AI card below for a step-by-step guide and direct API key link</span>
             </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-navy btn-sm" onclick="openManualModal('ai')">
+                <i class="bi bi-book me-1"></i> AI Manual
+              </button>
+              <button type="button" class="btn btn-outline-primary btn-sm fw-bold" onclick="testAIConnections()">
+                <i class="bi bi-lightning-charge me-1"></i> Test All AI Providers
+              </button>
+            </div>
+          </div>
+          <div class="card-body p-3">
+            <div id="testAIResult" class="alert d-none mb-3"></div>
+
+            <form id="aiSettingsForm" onsubmit="saveAISettings(event)">
+              <!-- Default Provider Selection -->
+              <div class="p-3 bg-light rounded-3 mb-3 border">
+                <label class="form-label fw-bold text-navy mb-1">Active Default AI Copywriting Engine</label>
+                <select id="aiProvider" class="form-select fw-semibold">
+                  <option value="auto" {% if settings.AI_PROVIDER == 'auto' %}selected{% endif %}>⚡ Auto-Select (Uses First Configured AI Key, Falls Back to Smart Retail Engine)</option>
+                  <option value="gemini" {% if settings.AI_PROVIDER == 'gemini' %}selected{% endif %}>✨ Google Gemini (Multimodal Photo Vision + Text)</option>
+                  <option value="openai" {% if settings.AI_PROVIDER == 'openai' %}selected{% endif %}>🧠 OpenAI GPT-4o (Multimodal Photo Vision + Text)</option>
+                  <option value="anthropic" {% if settings.AI_PROVIDER == 'anthropic' %}selected{% endif %}>🤖 Anthropic Claude (Multimodal Photo Vision + Text)</option>
+                  <option value="groq" {% if settings.AI_PROVIDER == 'groq' %}selected{% endif %}>🚀 Groq Llama (Ultra-Fast Text Generation)</option>
+                  <option value="smart_template" {% if settings.AI_PROVIDER == 'smart_template' %}selected{% endif %}>🏷️ Built-In Smart Retail Copy Engine (Offline / Zero API Cost)</option>
+                </select>
+                <div class="form-text">Staff can also switch between any of these AI clients directly on the Add/Edit Product screen.</div>
+              </div>
+
+              <!-- 1. Google Gemini -->
+              <div class="card border rounded-3 mb-3">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <span class="fw-bold text-navy"><i class="bi bi-google text-primary me-1"></i> 1. Google Gemini API (Photo Vision + Text)</span>
+                    <div class="d-flex align-items-center gap-2">
+                      <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 fs-8" data-bs-toggle="collapse" data-bs-target="#manualGemini">
+                        <i class="bi bi-book me-1"></i> How to Connect (Manual)
+                      </button>
+                      <span class="badge {% if settings.GEMINI_API_KEY %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ 'Connected' if settings.GEMINI_API_KEY else 'Not Configured' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="collapse mb-2" id="manualGemini">
+                    <div class="p-2 bg-light rounded border small text-secondary">
+                      <strong>Step-by-Step to Connect Google Gemini (Free Tier Available):</strong>
+                      <ol class="mb-0 ps-3 mt-1">
+                        <li>Click <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="fw-bold">Open Google AI Studio API Keys <i class="bi bi-box-arrow-up-right"></i></a> and sign in with your Google account.</li>
+                        <li>Click the blue <strong>"Create API Key"</strong> button and copy the generated key (starts with <code>AIza...</code>).</li>
+                        <li>Paste the key into the <strong>Gemini API Key</strong> box below and click <strong>Save AI Settings</strong>.</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-12 col-md-8">
+                      <label class="form-label fs-8 fw-semibold mb-1">Gemini API Key</label>
+                      <input type="password" id="geminiApiKey" class="form-control form-control-sm font-monospace" placeholder="AIzaSy..." value="{{ settings.GEMINI_API_KEY }}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="form-label fs-8 fw-semibold mb-1">Gemini Model</label>
+                      <input type="text" id="geminiModel" class="form-control form-control-sm" list="geminiModels" value="{{ settings.GEMINI_MODEL }}">
+                      <datalist id="geminiModels">
+                        <option value="gemini-2.5-flash">
+                        <option value="gemini-2.0-flash">
+                        <option value="gemini-2.5-pro">
+                      </datalist>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. OpenAI -->
+              <div class="card border rounded-3 mb-3">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <span class="fw-bold text-navy"><i class="bi bi-cpu text-success me-1"></i> 2. OpenAI API (Photo Vision + Text)</span>
+                    <div class="d-flex align-items-center gap-2">
+                      <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 fs-8" data-bs-toggle="collapse" data-bs-target="#manualOpenAI">
+                        <i class="bi bi-book me-1"></i> How to Connect (Manual)
+                      </button>
+                      <span class="badge {% if settings.OPENAI_API_KEY %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ 'Connected' if settings.OPENAI_API_KEY else 'Not Configured' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="collapse mb-2" id="manualOpenAI">
+                    <div class="p-2 bg-light rounded border small text-secondary">
+                      <strong>Step-by-Step to Connect OpenAI (GPT-4o / GPT-4o-mini):</strong>
+                      <ol class="mb-0 ps-3 mt-1">
+                        <li>Click <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="fw-bold">Open OpenAI API Keys Page <i class="bi bi-box-arrow-up-right"></i></a> and log in.</li>
+                        <li>Click <strong>"+ Create new secret key"</strong>, name it <em>Overstock Outlet</em>, and copy the key (starts with <code>sk-...</code>).</li>
+                        <li>Paste the key into the <strong>OpenAI API Key</strong> box below and click <strong>Save AI Settings</strong>.</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-12 col-md-8">
+                      <label class="form-label fs-8 fw-semibold mb-1">OpenAI API Key</label>
+                      <input type="password" id="openaiApiKey" class="form-control form-control-sm font-monospace" placeholder="sk-proj-..." value="{{ settings.OPENAI_API_KEY }}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="form-label fs-8 fw-semibold mb-1">OpenAI Model</label>
+                      <input type="text" id="openaiModel" class="form-control form-control-sm" list="openaiModels" value="{{ settings.OPENAI_MODEL }}">
+                      <datalist id="openaiModels">
+                        <option value="gpt-4o-mini">
+                        <option value="gpt-4o">
+                        <option value="gpt-4.1-mini">
+                      </datalist>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Anthropic Claude -->
+              <div class="card border rounded-3 mb-3">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <span class="fw-bold text-navy"><i class="bi bi-chat-square-quote text-warning me-1"></i> 3. Anthropic Claude API (Photo Vision + Text)</span>
+                    <div class="d-flex align-items-center gap-2">
+                      <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 fs-8" data-bs-toggle="collapse" data-bs-target="#manualClaude">
+                        <i class="bi bi-book me-1"></i> How to Connect (Manual)
+                      </button>
+                      <span class="badge {% if settings.ANTHROPIC_API_KEY %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ 'Connected' if settings.ANTHROPIC_API_KEY else 'Not Configured' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="collapse mb-2" id="manualClaude">
+                    <div class="p-2 bg-light rounded border small text-secondary">
+                      <strong>Step-by-Step to Connect Anthropic Claude:</strong>
+                      <ol class="mb-0 ps-3 mt-1">
+                        <li>Click <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" class="fw-bold">Open Anthropic Console API Keys <i class="bi bi-box-arrow-up-right"></i></a>.</li>
+                        <li>Click <strong>"Create Key"</strong> and copy the key (starts with <code>sk-ant-...</code>).</li>
+                        <li>Paste the key into the <strong>Anthropic API Key</strong> box below and click <strong>Save AI Settings</strong>.</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-12 col-md-8">
+                      <label class="form-label fs-8 fw-semibold mb-1">Anthropic API Key</label>
+                      <input type="password" id="anthropicApiKey" class="form-control form-control-sm font-monospace" placeholder="sk-ant-..." value="{{ settings.ANTHROPIC_API_KEY }}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="form-label fs-8 fw-semibold mb-1">Claude Model</label>
+                      <input type="text" id="anthropicModel" class="form-control form-control-sm" list="claudeModels" value="{{ settings.ANTHROPIC_MODEL }}">
+                      <datalist id="claudeModels">
+                        <option value="claude-3-5-haiku-latest">
+                        <option value="claude-3-5-sonnet-latest">
+                        <option value="claude-3-7-sonnet-latest">
+                      </datalist>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Groq -->
+              <div class="card border rounded-3 mb-3">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <span class="fw-bold text-navy"><i class="bi bi-lightning-fill text-danger me-1"></i> 4. Groq Cloud API (Ultra-Fast Llama Models)</span>
+                    <div class="d-flex align-items-center gap-2">
+                      <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 fs-8" data-bs-toggle="collapse" data-bs-target="#manualGroq">
+                        <i class="bi bi-book me-1"></i> How to Connect (Manual)
+                      </button>
+                      <span class="badge {% if settings.GROQ_API_KEY %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ 'Connected' if settings.GROQ_API_KEY else 'Not Configured' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="collapse mb-2" id="manualGroq">
+                    <div class="p-2 bg-light rounded border small text-secondary">
+                      <strong>Step-by-Step to Connect Groq Cloud (Free Tier Available):</strong>
+                      <ol class="mb-0 ps-3 mt-1">
+                        <li>Click <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="fw-bold">Open Groq Cloud API Keys <i class="bi bi-box-arrow-up-right"></i></a> and sign in.</li>
+                        <li>Click <strong>"Create API Key"</strong> and copy the key (starts with <code>gsk_...</code>).</li>
+                        <li>Paste the key into the <strong>Groq API Key</strong> box below and click <strong>Save AI Settings</strong>.</li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-12 col-md-8">
+                      <label class="form-label fs-8 fw-semibold mb-1">Groq API Key</label>
+                      <input type="password" id="groqApiKey" class="form-control form-control-sm font-monospace" placeholder="gsk_..." value="{{ settings.GROQ_API_KEY }}">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label class="form-label fs-8 fw-semibold mb-1">Groq Model</label>
+                      <input type="text" id="groqModel" class="form-control form-control-sm" list="groqModels" value="{{ settings.GROQ_MODEL }}">
+                      <datalist id="groqModels">
+                        <option value="llama-3.3-70b-versatile">
+                        <option value="llama-3.1-8b-instant">
+                      </datalist>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom Store Prompt / Tone Instructions -->
+              <div class="mb-3">
+                <label class="form-label fw-bold text-navy">Custom Store Copywriting Instructions (Optional)</label>
+                <textarea id="aiCustomPrompt" rows="2" class="form-control fs-7" placeholder="e.g. Emphasize same-day local Baltimore delivery options and up to 70% off retail showroom pricing.">{{ settings.AI_CUSTOM_PROMPT }}</textarea>
+                <div class="form-text">Appended to all AI prompts so generated descriptions match your client's exact brand voice.</div>
+              </div>
+
+              <button type="submit" id="saveAISettingsBtn" class="btn btn-navy text-white fw-bold px-4">
+                <i class="bi bi-save me-1"></i> Save AI Settings
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -325,6 +715,98 @@
 
 {% block extra_scripts %}
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const tabParam = params.get('tab');
+  if (tabParam) {
+    const tabBtn = document.getElementById(`${tabParam}-tab`);
+    if (tabBtn) {
+      bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+    }
+  }
+  if (params.get('oauth_success') === '1') {
+    showToast('Facebook Page & Instagram connected via OAuth!', 'success');
+  } else if (params.get('oauth_error')) {
+    showToast('OAuth Error: ' + params.get('oauth_error'), 'danger');
+  }
+});
+
+async function runAutoDiscover() {
+  const token = document.getElementById('wizardAccessToken').value.trim();
+  const rawAppId = document.getElementById('wizardAppId').value.trim();
+  const appId = /^\d{8,}$/.test(rawAppId) ? rawAppId : '';
+  const appSecret = appId ? document.getElementById('wizardAppSecret').value.trim() : '';
+  const preferredPageId = document.getElementById('fbPageId').value.trim();
+  const btn = document.getElementById('autoDiscoverBtn');
+  const resultBox = document.getElementById('testConnectionResult');
+
+  if (!token) {
+    showToast('Please paste an Access Token from Meta Graph API Explorer first', 'warning');
+    document.getElementById('fbInlineManual').classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Auto-Discovering...';
+  resultBox.className = 'alert alert-info';
+  resultBox.textContent = 'Contacting Meta Graph API to discover your Facebook Page & Instagram Business Account...';
+  resultBox.classList.remove('d-none');
+
+  try {
+    const res = await fetch('/api/admin/connections/auto-discover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_token: token,
+        meta_app_id: appId || null,
+        meta_app_secret: appSecret || null,
+        preferred_page_id: preferredPageId || null
+      })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      document.getElementById('fbPageId').value = data.page_id || '';
+      if (data.detected_app_id) {
+        document.getElementById('wizardAppId').value = data.detected_app_id;
+      }
+      if (data.ig_user_id) {
+        document.getElementById('igUserId').value = data.ig_user_id;
+      }
+      resultBox.className = 'alert alert-success';
+      resultBox.innerHTML = `<strong>✅ Auto-Discovery Complete!</strong><br>${data.message}` +
+        (data.token_upgraded_to_permanent ? '<br><span class="badge bg-success mt-1">Upgraded to Never-Expiring Page Token</span>' : '');
+      showToast('Facebook Page connected and saved!', 'success');
+      setTimeout(() => {
+        window.location.href = '/admin?tab=settings';
+      }, 1500);
+    } else {
+      resultBox.className = 'alert alert-danger';
+      resultBox.textContent = data.detail || 'Could not auto-discover accounts.';
+      document.getElementById('fbInlineManual').classList.add('show');
+      showToast('See instructions in the red alert box above', 'danger');
+    }
+  } catch (err) {
+    resultBox.className = 'alert alert-danger';
+    resultBox.textContent = 'Network error: ' + err.message;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-lightning-charge-fill me-1"></i> Auto-Discover & Connect FB + IG';
+  }
+}
+
+function startFacebookOAuth() {
+  const appId = document.getElementById('wizardAppId').value.trim();
+  const appSecret = document.getElementById('wizardAppSecret').value.trim();
+  if (!/^\d{8,}$/.test(appId) || !appSecret) {
+    showToast('Please enter your numeric 15-digit Meta App ID and App Secret (from developers.facebook.com/apps) to use OAuth Login', 'warning');
+    document.getElementById('fbInlineManual').classList.add('show');
+    return;
+  }
+  const url = `/api/admin/oauth/facebook/start?app_id=${encodeURIComponent(appId)}&app_secret=${encodeURIComponent(appSecret)}`;
+  window.location.href = url;
+}
+
 async function handleCreateUser(e) {
   e.preventDefault();
   const payload = {
@@ -369,6 +851,109 @@ async function toggleUserActive(userId, makeActive) {
   }
 }
 
+async function saveSocialSettings(e) {
+  e.preventDefault();
+  const btn = document.getElementById('saveSettingsBtn');
+  btn.disabled = true;
+
+  const payload = {
+    meta_app_id: document.getElementById('wizardAppId').value.trim(),
+    meta_app_secret: document.getElementById('wizardAppSecret').value.trim(),
+    fb_page_id: document.getElementById('fbPageId').value.trim(),
+    fb_page_token: document.getElementById('fbPageToken').value.trim(),
+    ig_user_id: document.getElementById('igUserId').value.trim(),
+    store_name: document.getElementById('storeName').value.trim(),
+    store_location: document.getElementById('storeLocation').value.trim(),
+    store_facebook_page_url: document.getElementById('storeFbUrl').value.trim(),
+    store_phone: document.getElementById('storePhone').value.trim(),
+    store_hours: document.getElementById('storeHours').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      showToast('Social & store settings saved to database!', 'success');
+      setTimeout(() => {
+        window.location.href = '/admin?tab=settings';
+      }, 600);
+    } else {
+      const err = await res.json();
+      showToast(err.detail || 'Failed to save settings', 'danger');
+    }
+  } catch (err) {
+    showToast('Network error saving settings', 'danger');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function saveAISettings(e) {
+  e.preventDefault();
+  const btn = document.getElementById('saveAISettingsBtn');
+  btn.disabled = true;
+
+  const payload = {
+    ai_provider: document.getElementById('aiProvider').value,
+    gemini_api_key: document.getElementById('geminiApiKey').value.trim(),
+    gemini_model: document.getElementById('geminiModel').value.trim(),
+    openai_api_key: document.getElementById('openaiApiKey').value.trim(),
+    openai_model: document.getElementById('openaiModel').value.trim(),
+    anthropic_api_key: document.getElementById('anthropicApiKey').value.trim(),
+    anthropic_model: document.getElementById('anthropicModel').value.trim(),
+    groq_api_key: document.getElementById('groqApiKey').value.trim(),
+    groq_model: document.getElementById('groqModel').value.trim(),
+    ai_custom_prompt: document.getElementById('aiCustomPrompt').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/admin/ai-settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      showToast('AI copywriting settings saved!', 'success');
+      setTimeout(() => {
+        window.location.href = '/admin?tab=ai';
+      }, 600);
+    } else {
+      const err = await res.json();
+      showToast(err.detail || 'Failed to save AI settings', 'danger');
+    }
+  } catch (err) {
+    showToast('Network error saving AI settings', 'danger');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function testAIConnections() {
+  const resultBox = document.getElementById('testAIResult');
+  resultBox.className = 'alert alert-info';
+  resultBox.textContent = 'Testing configured AI providers...';
+  resultBox.classList.remove('d-none');
+
+  try {
+    const res = await fetch('/api/admin/ai/test');
+    const data = await res.json();
+    const results = data.results || {};
+    const lines = [];
+    for (const [key, info] of Object.entries(results)) {
+      const icon = info.success ? '✅' : (info.unconfigured ? '⚪' : '❌');
+      lines.push(`${icon} <strong>${key.toUpperCase()}:</strong> ${info.message}`);
+    }
+    resultBox.className = 'alert alert-light border shadow-sm';
+    resultBox.innerHTML = lines.join('<br>');
+  } catch (err) {
+    resultBox.className = 'alert alert-danger';
+    resultBox.textContent = 'AI connection test failed: ' + err.message;
+  }
+}
+
 async function testSocialConnections() {
   const resultBox = document.getElementById('testConnectionResult');
   resultBox.className = 'alert alert-info';
@@ -379,16 +964,48 @@ async function testSocialConnections() {
     const res = await fetch('/api/admin/connections/test');
     const data = await res.json();
     
-    let html = `<strong>Facebook Page:</strong> ${data.facebook_page.message}<br>`;
-    html += `<strong>Instagram:</strong> ${data.instagram.message}`;
+    const fbValid = data.facebook_page.valid;
+    const igValid = data.instagram.valid;
+    const igUnconfigured = data.instagram.mode === 'unconfigured';
 
-    resultBox.className = 'alert alert-success';
+    let html = `<strong>Facebook:</strong> ${data.facebook_page.message}<br>`;
+    if (igValid) {
+      html += `<strong>Instagram:</strong> ${data.instagram.message}`;
+    } else if (fbValid && igUnconfigured) {
+      html += `<strong>Instagram:</strong> Optional (Facebook-Only Mode is active — you can link Instagram later at any time)`;
+    } else {
+      html += `<strong>Instagram:</strong> ${data.instagram.message}`;
+    }
+
+    if (fbValid && (igValid || igUnconfigured)) {
+      resultBox.className = 'alert alert-success';
+    } else if (fbValid || igValid) {
+      resultBox.className = 'alert alert-warning';
+    } else {
+      resultBox.className = 'alert alert-danger';
+    }
     resultBox.innerHTML = html;
   } catch (err) {
     resultBox.className = 'alert alert-danger';
     resultBox.textContent = 'Connection test failed: ' + err.message;
   }
 }
+
+async function retryPublishLog(logId) {
+  try {
+    showToast('Retrying publish task...', 'info');
+    const res = await fetch(`/api/publish/logs/${logId}/retry`, { method: 'POST' });
+    const data = await res.json();
+    if (data.status === 'success') {
+      showToast('Retry succeeded!', 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showToast('Retry failed: ' + (data.error || data.message || 'Error'), 'danger');
+      setTimeout(() => location.reload(), 1200);
+    }
+  } catch (err) {
+    showToast('Retry error', 'danger');
+  }
+}
 </script>
 {% endblock %}
-

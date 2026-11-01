@@ -19,7 +19,7 @@
       <a href="/products/{{ product.id }}/edit" class="btn btn-outline-primary btn-sm px-3">
         <i class="bi bi-pencil me-1"></i> Edit
       </a>
-      <button class="btn btn-outline-danger btn-sm px-3" onclick="confirmDeleteProduct({{ product.id }})">
+      <button class="btn btn-outline-danger btn-sm px-3" onclick="confirmDeleteProduct('{{ product.id }}')">
         <i class="bi bi-trash"></i>
       </button>
     </div>
@@ -54,30 +54,52 @@
 
     <!-- Quick Publishing Actions Card -->
     <div class="card border-0 shadow-sm rounded-3">
-      <div class="card-header bg-white py-3 border-bottom">
+      <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
         <h6 class="fw-bold text-navy mb-0"><i class="bi bi-broadcast text-warning me-2"></i>Publish to Social Channels</h6>
+        <div class="d-flex align-items-center gap-2">
+          {% if user and user.role == 'admin' %}
+            <a href="/admin?tab=settings" class="btn btn-outline-primary btn-sm py-0 px-2 fs-8">
+              <i class="bi bi-gear me-1"></i>Connect Accounts
+            </a>
+          {% endif %}
+          <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 fs-8" onclick="openManualModal('fb')">
+            <i class="bi bi-book me-1"></i>Manual
+          </button>
+        </div>
       </div>
       <div class="card-body p-3">
         <div class="d-grid gap-2">
           <!-- Facebook Page Button -->
-          <button class="btn btn-outline-primary d-flex align-items-center justify-content-between p-3 rounded-3" onclick="publishSinglePlatform({{ product.id }}, 'facebook_page')">
+          <button class="btn btn-outline-primary d-flex align-items-center justify-content-between p-3 rounded-3" onclick="publishSinglePlatform('{{ product.id }}', 'facebook_page')">
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-facebook fs-4 text-primary"></i>
               <div class="text-start">
                 <span class="fw-bold d-block">Facebook Business Page</span>
-                <span class="text-muted fs-8">Post photos & details to Page feed</span>
+                <span class="text-muted fs-8">
+                  {% if settings.FB_PAGE_ID and settings.FB_PAGE_ACCESS_TOKEN %}
+                    Connected (Page ID: {{ settings.FB_PAGE_ID }}) • Tap to publish
+                  {% else %}
+                    Not connected yet — connect in Admin UI Settings
+                  {% endif %}
+                </span>
               </div>
             </div>
             <span class="badge bg-primary">Publish Now</span>
           </button>
 
           <!-- Instagram Button -->
-          <button class="btn btn-outline-danger d-flex align-items-center justify-content-between p-3 rounded-3" onclick="publishSinglePlatform({{ product.id }}, 'instagram')">
+          <button class="btn btn-outline-danger d-flex align-items-center justify-content-between p-3 rounded-3" onclick="publishSinglePlatform('{{ product.id }}', 'instagram')">
             <div class="d-flex align-items-center gap-2">
               <i class="bi bi-instagram fs-4 text-danger"></i>
               <div class="text-start">
                 <span class="fw-bold d-block">Instagram Business</span>
-                <span class="text-muted fs-8">Publish image & retail caption</span>
+                <span class="text-muted fs-8">
+                  {% if settings.IG_USER_ID and settings.FB_PAGE_ACCESS_TOKEN %}
+                    Connected (IG ID: {{ settings.IG_USER_ID }}) • Tap to publish
+                  {% else %}
+                    Not connected yet — connect in Admin UI Settings
+                  {% endif %}
+                </span>
               </div>
             </div>
             <span class="badge bg-danger">Publish Now</span>
@@ -89,7 +111,7 @@
               <i class="bi bi-shop fs-4 text-info"></i>
               <div class="text-start">
                 <span class="fw-bold d-block">Facebook Marketplace</span>
-                <span class="text-muted fs-8">Assisted posting checklist & copy pack</span>
+                <span class="text-muted fs-8">Assisted posting checklist &amp; 1-tap copy pack</span>
               </div>
             </div>
             <span class="badge bg-info text-dark">Open Guide <i class="bi bi-arrow-right ms-1"></i></span>
@@ -183,12 +205,12 @@
                     </td>
                     <td class="text-muted">{{ log.created_at.strftime('%m/%d %H:%M') }}</td>
                     <td>
-                      {% if log.post_url %}
+                      {% if log.post_url and log.status == 'success' %}
                         <a href="{{ log.post_url }}" target="_blank" class="btn btn-outline-secondary btn-xs py-0 px-2" title="Open Post">
                           <i class="bi bi-box-arrow-up-right"></i>
                         </a>
                       {% elif log.status == 'failed' %}
-                        <button class="btn btn-outline-danger btn-xs py-0 px-2" onclick="retryPublishLog({{ log.id }})">
+                        <button class="btn btn-outline-danger btn-xs py-0 px-2" onclick="retryPublishLog('{{ log.id }}')">
                           <i class="bi bi-arrow-clockwise"></i> Retry
                         </button>
                       {% endif %}
@@ -222,9 +244,15 @@ async function publishSinglePlatform(productId, platform) {
       body: JSON.stringify({ platforms: [platform] })
     });
     const data = await res.json();
-    if (res.ok) {
-      showToast('Published successfully!', 'success');
-      setTimeout(() => location.reload(), 1000);
+    if (res.ok && data.results && data.results.length > 0) {
+      const result = data.results[0];
+      if (result.status === 'success') {
+        showToast(result.message || 'Published successfully!', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast(result.error || result.message || 'Publish failed', 'danger');
+        setTimeout(() => location.reload(), 1500);
+      }
     } else {
       showToast('Publish failed: ' + (data.detail || 'Error'), 'danger');
     }
@@ -242,7 +270,8 @@ async function retryPublishLog(logId) {
       showToast('Retry succeeded!', 'success');
       setTimeout(() => location.reload(), 800);
     } else {
-      showToast('Retry failed: ' + (data.message || 'Error'), 'danger');
+      showToast('Retry failed: ' + (data.error || data.message || 'Error'), 'danger');
+      setTimeout(() => location.reload(), 1200);
     }
   } catch (err) {
     showToast('Retry error', 'danger');
@@ -265,4 +294,3 @@ async function confirmDeleteProduct(productId) {
 }
 </script>
 {% endblock %}
-

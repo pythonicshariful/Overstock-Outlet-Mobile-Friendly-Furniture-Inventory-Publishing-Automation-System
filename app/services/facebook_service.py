@@ -1,19 +1,32 @@
 import json
-import uuid
 import httpx
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from app.config import settings
 from app.models.product import Product
 
 class FacebookService:
     def __init__(self, page_id: Optional[str] = None, page_token: Optional[str] = None):
-        self.page_id = page_id or settings.FB_PAGE_ID
-        self.page_token = page_token or settings.FB_PAGE_ACCESS_TOKEN
-        self.api_version = settings.META_GRAPH_API_VERSION
-        self.base_url = f"https://graph.facebook.com/{self.api_version}"
+        self._page_id = page_id
+        self._page_token = page_token
+
+    @property
+    def page_id(self) -> str:
+        return (self._page_id or settings.FB_PAGE_ID or "").strip()
+
+    @property
+    def page_token(self) -> str:
+        return (self._page_token or settings.FB_PAGE_ACCESS_TOKEN or "").strip()
+
+    @property
+    def api_version(self) -> str:
+        return settings.META_GRAPH_API_VERSION
+
+    @property
+    def base_url(self) -> str:
+        return f"https://graph.facebook.com/{self.api_version}"
 
     def is_configured(self) -> bool:
-        return bool(self.page_id and self.page_token and self.page_token.strip() != "")
+        return bool(self.page_id and self.page_token)
 
     def format_page_caption(self, product: Product, custom_caption: Optional[str] = None) -> str:
         if custom_caption and custom_caption.strip():
@@ -39,15 +52,23 @@ class FacebookService:
         details_str = "\n".join(details)
         desc_str = f"\n{product.description}\n" if product.description else ""
 
+        contact_lines = [
+            f"📍 Available now at {settings.STORE_NAME}",
+            f"📌 {settings.STORE_LOCATION} | First come, first served!",
+        ]
+        if settings.STORE_PHONE and settings.STORE_PHONE.strip():
+            contact_lines.append(f"📞 Call/Text: {settings.STORE_PHONE.strip()}")
+        if settings.STORE_HOURS and settings.STORE_HOURS.strip():
+            contact_lines.append(f"🕒 Hours: {settings.STORE_HOURS.strip()}")
+
+        contact_block = "\n".join(contact_lines)
+
         caption = (
             f"🛋️ NEW INVENTORY: {product.title}\n"
             f"💰 Price: {price_line}\n\n"
             f"{details_str}\n"
             f"{desc_str}\n"
-            f"📍 Available now at Overstock Outlet\n"
-            f"📌 Baltimore, MD | First come, first served!\n"
-            f"📞 Call/Text: {settings.STORE_PHONE}\n"
-            f"🕒 Hours: {settings.STORE_HOURS}\n\n"
+            f"{contact_block}\n\n"
             f"#OverstockOutlet #BaltimoreFurniture #FurnitureDeals #BmoreOutlet #FurnitureForSale"
         )
         return caption
@@ -57,14 +78,14 @@ class FacebookService:
         if not self.is_configured():
             return {
                 "valid": False,
-                "mode": "mock",
-                "message": "Facebook Page credentials are not configured. Currently running in simulation mode."
+                "mode": "unconfigured",
+                "message": "Facebook Page credentials (FB_PAGE_ID and FB_PAGE_ACCESS_TOKEN) are not configured."
             }
 
         url = f"{self.base_url}/{self.page_id}"
         params = {
             "access_token": self.page_token,
-            "fields": "id,name,category,link,is_published"
+            "fields": "id,name"
         }
 
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -76,8 +97,8 @@ class FacebookService:
                         "valid": True,
                         "mode": "live",
                         "page_name": data.get("name"),
-                        "page_link": data.get("link", settings.STORE_FACEBOOK_PAGE_URL),
-                        "message": f"Successfully connected to Page: {data.get('name')} (ID: {data.get('id')})"
+                        "page_link": settings.STORE_FACEBOOK_PAGE_URL,
+                        "message": f"Successfully connected to Facebook: {data.get('name')} (ID: {data.get('id')})"
                     }
                 else:
                     error_msg = data.get("error", {}).get("message", "Unknown Facebook API error")
@@ -101,26 +122,18 @@ class FacebookService:
         base_app_url: str = "http://localhost:8000"
     ) -> Dict[str, Any]:
         """
-        Publishes product to Facebook Business Page.
-        Uses live Meta Graph API if configured; otherwise gracefully executes simulation.
+        Publishes product to Facebook Business Page via live Meta Graph API.
         """
         caption = self.format_page_caption(product, custom_caption)
-        
-        # Check if live mode is enabled and credentials present
-        if not self.is_configured() or settings.MOCK_SOCIAL_PUBLISHING:
-            # Simulation / Demo Mode
-            mock_post_id = f"{self.page_id or '108293847291'}_{int(uuid.uuid4().int % 1000000000000)}"
-            mock_url = f"{settings.STORE_FACEBOOK_PAGE_URL}/posts/{mock_post_id.split('_')[-1]}"
+
+        if not self.is_configured():
             return {
-                "success": True,
-                "mode": "simulation",
-                "external_id": mock_post_id,
-                "post_url": mock_url,
+                "success": False,
+                "mode": "unconfigured",
                 "caption": caption,
-                "message": f"[Simulation] Post published successfully to Overstock Outlet Page! (Post ID: {mock_post_id})"
+                "error": "Facebook Page credentials (FB_PAGE_ID and FB_PAGE_ACCESS_TOKEN) are not configured. Configure them in Admin > Social Media & API Settings."
             }
 
-        # LIVE PUBLISH VIA GRAPH API
         async with httpx.AsyncClient(timeout=30.0) as client:
             try:
                 # 1. Check images
@@ -144,11 +157,12 @@ class FacebookService:
                         }
                     else:
                         err = data.get("error", {}).get("message", res.text)
-                        return {"success": False, "mode": "live", "error": f"FB Post failed: {err}"}
+                        return {"success": False, "mode": "live", "caption": caption, "error": f"FB Post failed: {err}"}
 
                 # 2. Multi-image or Single-image post
                 # Upload photos as unpublished
                 media_ids = []
+                upload_errors = []
                 for img in product.images:
                     local_file = settings.UPLOAD_DIR / img.filename
                     if not local_file.exists():
@@ -163,11 +177,20 @@ class FacebookService:
                         }
                         res = await client.post(photo_upload_url, data=data, files=files)
                         res_data = res.json()
-                        if "id" in res_data:
+                        if res.status_code == 200 and "id" in res_data:
                             media_ids.append(res_data["id"])
+                        else:
+                            err_detail = res_data.get("error", {}).get("message", res.text)
+                            upload_errors.append(err_detail)
 
                 if not media_ids:
-                    return {"success": False, "mode": "live", "error": "Could not upload images to Facebook"}
+                    err_reason = "; ".join(upload_errors) if upload_errors else "Image files not found on disk"
+                    return {
+                        "success": False,
+                        "mode": "live",
+                        "caption": caption,
+                        "error": f"Could not upload images to Facebook: {err_reason}"
+                    }
 
                 # Create multi-photo feed post
                 feed_url = f"{self.base_url}/{self.page_id}/feed"
@@ -193,14 +216,14 @@ class FacebookService:
                     }
                 else:
                     err = feed_data.get("error", {}).get("message", feed_res.text)
-                    return {"success": False, "mode": "live", "error": f"Failed creating FB feed post: {err}"}
+                    return {"success": False, "mode": "live", "caption": caption, "error": f"Failed creating FB feed post: {err}"}
 
             except Exception as e:
                 return {
                     "success": False,
                     "mode": "error",
+                    "caption": caption,
                     "error": f"Facebook network/API error: {str(e)}"
                 }
 
 facebook_service = FacebookService()
-

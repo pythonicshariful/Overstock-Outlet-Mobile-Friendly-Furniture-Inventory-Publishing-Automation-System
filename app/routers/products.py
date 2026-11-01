@@ -1,18 +1,36 @@
+import base64
 import hashlib
 import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, status
+from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, desc
+from app.config import settings
 from app.database import get_db
 from app.models.user import User
 from app.models.product import Product, ProductImage
 from app.schemas.product import ProductCreate, ProductUpdate, ProductOut, ProductListResponse, ProductImageOut
 from app.services.image_service import validate_image_file, process_and_save_image, remove_image_files
+from app.services.ai_service import ai_service
 from app.dependencies import require_current_user
 
 router = APIRouter(prefix="/api/products", tags=["Products"])
+
+class GenerateDescriptionRequest(BaseModel):
+    title: Optional[str] = ""
+    category: str = "Living Room"
+    condition: str = "Brand New"
+    price: Optional[float] = None
+    original_price: Optional[float] = None
+    brand: Optional[str] = None
+    color: Optional[str] = None
+    dimensions: Optional[str] = None
+    provider: Optional[str] = "auto"
+    product_id: Optional[int] = None
+    image_base64: Optional[str] = None
+    image_mime_type: Optional[str] = "image/jpeg"
 
 def generate_product_code() -> str:
     today_str = datetime.utcnow().strftime("%y%m%d")
@@ -23,6 +41,56 @@ def compute_duplicate_hash(title: str, price: float, condition: str) -> str:
     raw = f"{title.strip().lower()}:{price:.2f}:{condition.strip().lower()}"
     return hashlib.md5(raw.encode("utf-8")).hexdigest()
 
+@router.post("/generate-description")
+async def generate_product_description(
+    req: GenerateDescriptionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_current_user)
+):
+    img_b64 = req.image_base64
+    img_mime = req.image_mime_type or "image/jpeg"
+
+    # Strip data URL prefix if present (e.g. "data:image/jpeg;base64,...")
+    if img_b64 and "," in img_b64 and img_b64.startswith("data:"):
+        header, img_b64 = img_b64.split(",", 1)
+        if ":" in header and ";" in header:
+            img_mime = header.split(":")[1].split(";")[0]
+
+    # If no inline image was provided but an existing product_id has an uploaded photo, load primary photo from disk
+    if not img_b64 and req.product_id:
+        prod = db.query(Product).filter(Product.id == req.product_id).first()
+        if prod and prod.images:
+            img_path = settings.UPLOAD_DIR / prod.images[0].filename
+            if img_path.exists():
+                try:
+                    img_b64 = base64.b64encode(img_path.read_bytes()).decode("utf-8")
+                    ext = img_path.suffix.lower().lstrip(".")
+                    img_mime = f"image/{'jpeg' if ext in ('jpg', 'jpeg') else ext}"
+                except Exception:
+                    pass
+
+    result = await ai_service.generate_description(
+        title=req.title or "",
+        category=req.category,
+        condition=req.condition,
+        price=req.price,
+        original_price=req.original_price,
+        brand=req.brand,
+        color=req.color,
+        dimensions=req.dimensions,
+        provider=req.provider,
+        image_base64=img_b64,
+        image_mime_type=img_mime
+    )
+
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result.get("error", "Failed to generate description")
+        )
+
+    return result
+
 @router.get("", response_model=ProductListResponse)
 def list_products(
     q: Optional[str] = Query(None, description="Search keyword in title, code, brand"),
@@ -32,7 +100,8 @@ def list_products(
     status: Optional[str] = Query(None, description="Filter by status (Draft, Published, etc.)"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_current_user)
 ):
     query = db.query(Product)
 
@@ -83,7 +152,7 @@ def create_product(
         if existing_dup:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Potential duplicate detected: '{existing_dup.title}' (${existing_dup.price:.2f}) was added on {existing_dup.date_added.strftime('%b %d')}. Pass force_duplicate=true if this is intentional."
+                detail=f"Potential duplicate detected: '{existing_dup.title}' (${existing_dup.price:.2f}) was added on {existing_dup.date_added.strftime('%b %d')}. Click 'Save Anyway' if this is a separate unit."
             )
 
     code = product_in.product_code or generate_product_code()
@@ -115,7 +184,11 @@ def create_product(
     return new_product
 
 @router.get("/{product_id}", response_model=ProductOut)
-def get_product(product_id: int, db: Session = Depends(get_db)):
+def get_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_current_user)
+):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -132,7 +205,7 @@ def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    update_data = product_update.dict(exclude_unset=True)
+    update_data = product_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(product, field, value)
 
@@ -226,7 +299,7 @@ def delete_product_image(
 
     # If the deleted image was primary, make the first remaining image primary
     if was_primary:
-        remaining_first = db.query(ProductImage).filter(ProductImage.product_id == product_id).first()
+        remaining_first = db.query(ProductImage).filter(ProductImage.product_id == product_id).order_by(ProductImage.sort_order).first()
         if remaining_first:
             remaining_first.is_primary = True
             db.commit()
@@ -254,4 +327,3 @@ def set_primary_image(
     db.commit()
 
     return {"message": "Primary image updated"}
-

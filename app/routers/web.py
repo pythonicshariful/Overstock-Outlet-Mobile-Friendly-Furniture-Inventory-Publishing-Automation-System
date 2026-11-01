@@ -12,6 +12,7 @@ from app.models.publish_log import PublishLog
 from app.config import settings
 from app.dependencies import get_current_user_from_token
 from app.services.marketplace_service import marketplace_service
+from app.services.ai_service import ai_service
 
 router = APIRouter(include_in_schema=False)
 
@@ -74,6 +75,7 @@ def dashboard_page(
         context={
             "user": user,
             "products": products,
+            "settings": settings,
             "query_q": q,
             "current_category": category,
             "current_availability": availability,
@@ -96,6 +98,8 @@ def new_product_page(
         context={
             "user": user,
             "product": None,
+            "settings": settings,
+            "ai_status": ai_service.get_provider_status(),
             "active_page": "new_product"
         }
     )
@@ -145,6 +149,8 @@ def edit_product_page(
         context={
             "user": user,
             "product": product,
+            "settings": settings,
+            "ai_status": ai_service.get_provider_status(),
             "active_page": "edit_product"
         }
     )
@@ -169,6 +175,7 @@ def product_preview_page(
         context={
             "user": user,
             "product": product,
+            "settings": settings,
             "active_page": "preview"
         }
     )
@@ -197,6 +204,7 @@ def marketplace_assistant_page(
             "user": user,
             "product": product,
             "guide": guide,
+            "settings": settings,
             "active_page": "marketplace"
         }
     )
@@ -238,6 +246,7 @@ def admin_page(
             "users": users,
             "logs": logs,
             "settings": settings,
+            "ai_status": ai_service.get_provider_status(),
             "active_page": "admin"
         }
     )

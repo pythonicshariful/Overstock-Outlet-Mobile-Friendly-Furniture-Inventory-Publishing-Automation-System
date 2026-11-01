@@ -1,295 +1,211 @@
 # Overstock Outlet – Mobile-Friendly Furniture Inventory & Publishing Automation System
 
 [![Production Ready](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)]()
+[![Zero .env Required](https://img.shields.io/badge/Setup-100%25%20Web%20UI%20Driven-orange.svg)]()
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
-[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com/)
 [![Meta Graph API](https://img.shields.io/badge/Meta%20Graph%20API-v21.0-1877F2.svg)](https://developers.facebook.com/)
-[![Tests](https://img.shields.io/badge/Tests-9%20Passed%20(100%25)-brightgreen.svg)]()
+[![Multi-AI Ready](https://img.shields.io/badge/AI-Gemini%20%7C%20OpenAI%20%7C%20Claude%20%7C%20Groq-purple.svg)]()
 
-A complete, battle-tested, mobile-first inventory management and automated multi-channel publishing system custom-engineered for **Overstock Outlet**, a retail furniture showroom located in Baltimore, MD.
+A mobile-first inventory management, AI copywriting, and multi-channel social publishing system custom-engineered for **Overstock Outlet**, a retail furniture showroom in Baltimore, MD.
 
 - **Store Name:** Overstock Outlet
 - **Location:** Baltimore, MD, USA
 - **Official Facebook Page:** [https://www.facebook.com/overstockoutletbmore](https://www.facebook.com/overstockoutletbmore)
+- **Zero `.env` Required:** Facebook Page, Instagram Business, Store Details, and all 4 AI Providers can be connected, tested, and controlled **100% from the Web UI** (saved persistently in `overstock.db`).
+- **Built-In Interactive User Manual:** Every screen in the web application includes a clickable **"📖 User Manual"** button with step-by-step setup guides, direct external links, and 1-tap copy helpers.
 
 ---
 
 ## 📑 Table of Contents
 
-1. [System Architecture & Production Readiness](#1-system-architecture--production-readiness)
-2. [Quick Start & Installation](#2-quick-start--installation)
-3. [Step-by-Step: How to Connect Facebook Page & Instagram (Meta Graph API)](#3-step-by-step-how-to-connect-facebook-page--instagram-meta-graph-api)
-4. [Facebook Marketplace Assisted Publishing Workflow](#4-facebook-marketplace-assisted-publishing-workflow)
-5. [How to Use (Day-to-Day Employee Workflow)](#5-how-to-use-day-to-day-employee-workflow)
-6. [Administrator Guide & Operations](#6-administrator-guide--operations)
-7. [Production Deployment Checklist (Cloud & Local Server)](#7-production-deployment-checklist-cloud--local-server)
-8. [Automated Testing & Verification](#8-automated-testing--verification)
+1. [Key Features & Production Architecture](#1-key-features--production-architecture)
+2. [Quick Start & Installation (No `.env` Required)](#2-quick-start--installation-no-env-required)
+3. [Built-In Interactive User Manuals (Available on Every Screen)](#3-built-in-interactive-user-manuals-available-on-every-screen)
+4. [Connecting Facebook Page & Instagram from the Web UI](#4-connecting-facebook-page--instagram-from-the-web-ui)
+5. [Multi-Client AI Description & Vision Generator (UI Controlled)](#5-multi-client-ai-description--vision-generator-ui-controlled)
+6. [Facebook Marketplace 1-Tap Assisted Publishing Workflow](#6-facebook-marketplace-1-tap-assisted-publishing-workflow)
+7. [Day-to-Day Employee Workflow (60-Second Listing)](#7-day-to-day-employee-workflow-60-second-listing)
+8. [Administrator Guide & Production Deployment](#8-administrator-guide--production-deployment)
 
 ---
 
-## 1. System Architecture & Production Readiness
+## 1. Key Features & Production Architecture
 
-The application is engineered to meet strict enterprise standards for stability, security, and mobile ergonomics:
-
-- **Backend:** FastAPI (Python async, high throughput, zero lag).
-- **Database:** SQLAlchemy 2.0 ORM with connection pooling. Default SQLite for single-store zero-config deployment; 100% compatible with PostgreSQL for high-concurrency cloud hosting.
-- **Security & Authentication:** 
-  - Passwords hashed with **PBKDF2-HMAC-SHA256 (100,000 iterations, OWASP recommended)** with random cryptographic salt.
-  - Sockets and session management via secure JWT tokens with HTTP-only cookies.
-  - Role-Based Access Control (`admin` vs `employee`).
-- **Mobile Camera & Media Pipeline:**
-  - EXIF transposition auto-corrects mobile phone orientations (no sideways images).
-  - High-res display normalization (1600px Lanczos resample) + instant 400x400 mobile thumbnails.
-  - Anti-path-traversal UUID storage with SHA256 image fingerprinting.
-- **Accidental Duplicate Detection:**
-  - Content hashing (Title + Price + Condition) prevents accidental duplicate listings within a 7-day window.
+- **100% Web UI Configuration (No `.env` Editing Needed):**
+  - All credentials (`META_APP_ID`, `META_APP_SECRET`, `FB_PAGE_ID`, `FB_PAGE_ACCESS_TOKEN`, `IG_USER_ID`, `STORE_*`, and AI API keys/models) are managed directly in `/admin` and persisted in the `system_settings` table inside `overstock.db`.
+- **1-Click Facebook & Instagram Auto-Connect Wizard + OAuth Login:**
+  - Paste any Meta token in `/admin` and click **"Auto-Discover & Connect Both Now"** — or click **"Connect with Facebook Login (OAuth)"**. The backend automatically exchanges short-lived tokens for a 60-day/never-expiring Page Access Token, discovers your Facebook Page ID, detects your linked Instagram Business Account (`@username`), and saves everything automatically.
+- **Real Meta Graph API v21.0 Publishing:**
+  - **Facebook Business Page:** Publishes single-photo posts and multi-photo batch galleries (`attached_media`).
+  - **Instagram Business Account:** Publishes single-photo posts and multi-photo `CAROUSEL` albums (up to 10 photos) with canonical permalink tracking.
+- **Multi-Client AI Copywriting & Multimodal Photo Vision:**
+  - Supports **Google Gemini** (Vision + Text), **OpenAI GPT-4o** (Vision + Text), **Anthropic Claude** (Vision + Text), **Groq Llama** (Ultra-Fast Text), and a **Built-In Smart Retail Copy Engine** (100% free/offline, zero API keys needed).
+  - Staff can choose their preferred AI engine per item on the Add/Edit Product screen, or let **Auto Mode** pick the best connected provider and gracefully fall back to the Smart Retail Engine.
+- **Mobile Camera & Image Processing Pipeline:**
+  - Automatic EXIF orientation correction (no sideways phone photos), high-resolution 1600px Lanczos normalization, 400x400 fast mobile thumbnails, and SHA-256 content fingerprinting.
+- **Security & Duplicate Protection:**
+  - Passwords hashed with **PBKDF2-HMAC-SHA256 (100,000 iterations)** + HTTP-only JWT session cookies + Role-Based Access Control (`admin` vs `employee`).
+  - 7-day duplicate listing guard prevents accidental double-posting while allowing an explicit override for multiple identical showroom items.
 
 ---
 
-## 2. Quick Start & Installation
+## 2. Quick Start & Installation (No `.env` Required)
 
 ### Option A: Windows Store Computer (One-Click Launch)
 1. Double-click **`run.bat`** in the project folder.
-2. The script will automatically:
-   - Create the Python virtual environment (`venv`).
-   - Install all required dependencies from `requirements.txt`.
-   - Initialize the database schema and seed default data.
-   - Start the web server at `http://0.0.0.0:8000`.
+2. The script automatically creates the Python virtual environment (`venv`), installs dependencies from `requirements.txt`, initializes `overstock.db`, and launches the server at `http://localhost:8000`.
 
 ### Option B: Manual Command Line (Windows / macOS / Linux)
 ```bash
 # 1. Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate       # On Windows: .\venv\Scripts\activate
+.\venv\Scripts\activate        # On macOS/Linux: source venv/bin/activate
 
 # 2. Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 3. Launch application
+# 3. Launch application (no .env file required!)
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### Accessing the System
-- **Local Computer:** Open `http://localhost:8000` in your browser.
-- **Mobile Phones on the Store Floor:**
-  1. Connect your smartphone to the same Wi-Fi network as the server computer.
-  2. Find your computer's local IP address (e.g., run `ipconfig` on Windows -> look for IPv4 Address `192.168.1.XX`).
-  3. Open `http://192.168.1.XX:8000` on Chrome (Android) or Safari (iPhone).
-  4. Tap **"Add to Home Screen"** to install it as a standalone progressive web app.
+### Accessing the Application
+- **On the Host Computer:** Open `http://localhost:8000`
+- **On Store Floor Smartphones (Same Wi-Fi):**
+  1. Run `ipconfig` (Windows) or `ifconfig` (Mac/Linux) on the host computer to find its local IPv4 address (e.g., `192.168.1.50`).
+  2. Open `http://192.168.1.50:8000` on any phone browser (Safari / Chrome).
+  3. Tap **"Add to Home Screen"** for a full-screen mobile app experience.
 
 ### Default Login Accounts
 
-| Role | Username | Password | Purpose |
-|---|---|---|---|
-| **Floor Associate** | `employee` | `overstock123` | Quick camera photo capture, inventory CRUD, social publishing, marketplace assistant |
-| **Store Manager** | `admin` | `admin123` | User account management, social API credentials, failed post retry queue, system analytics |
+| Role | Username | Password | Capabilities |
+| :--- | :--- | :--- | :--- |
+| **Store Manager (Admin)** | `admin` | `admin123` | Connect Facebook, Instagram & AI in UI, manage staff accounts, view/retry publish logs, manage inventory |
+| **Floor Associate (Staff)** | `employee` | `overstock123` | Capture mobile photos, generate AI descriptions, publish to FB/IG/Marketplace, manage inventory |
 
-*(Note: Change these passwords upon first production launch)*
-
----
-
-## 3. Step-by-Step: How to Connect Facebook Page & Instagram (Meta Graph API)
-
-The system integrates directly with the **Meta Graph API (v21.0)** to publish feed posts and multi-photo sets to the official [Overstock Outlet Facebook Page](https://www.facebook.com/overstockoutletbmore) and linked Instagram account.
-
-Follow these exact steps to connect your real store accounts:
-
-```
-[Meta Developer App] ➡️ [Get Page ID] ➡️ [Generate Never-Expiring Token] ➡️ [Save in .env] ➡️ [Test Connection]
-```
-
-### Step 3.1: Create a Meta Developer App
-1. Go to the [Meta for Developers Portal](https://developers.facebook.com/) and log in with the Facebook account that is an **Admin** of the Overstock Outlet Facebook Page.
-2. Click **My Apps** > **Create App**.
-3. Select **Other** as the use case > click **Next**.
-4. Select **Business** as the app type > click **Next**.
-5. Set the App Name to `Overstock Outlet Inventory System` and enter your business email.
-6. Click **Create App**.
+*(Change default passwords after first login via `/admin` -> Staff Accounts)*
 
 ---
 
-### Step 3.2: Add Required Products & Permissions
-1. In your App Dashboard, scroll down and find **Facebook Login for Business** > click **Set Up**.
-2. From the left sidebar, navigate to **Tools** > **Graph API Explorer** (`https://developers.facebook.com/tools/explorer/`).
-3. In the top right of the explorer:
-   - **Meta App:** Select your newly created app.
-   - **User or Page:** Select **Get Page Access Token**.
-4. In the **Permissions** dropdown, add the following scopes:
-   - `pages_manage_posts` (allows the system to publish posts to your Page)
-   - `pages_read_engagement` (allows reading post status and verification)
-   - `pages_show_list` (lists managed pages)
-   - `instagram_basic` (for Instagram Business profile access)
-   - `instagram_content_publish` (allows publishing photos to Instagram)
-5. Click **Generate Access Token** and approve the Facebook permissions popup selecting **Overstock Outlet**.
+## 3. Built-In Interactive User Manuals (Available on Every Screen)
+
+Every page in the application includes a clickable **"📖 User Manual"** button so anyone can connect accounts or train staff without leaving the browser:
+
+- **Top Navigation Bar (`app/templates/base.html`):** Clicking **"📖 User Manual"** opens a 4-tab interactive modal:
+  1. **Connect FB & IG:** Step-by-step instructions with direct links to Meta for Developers & Graph API Explorer, 1-click copy badges for all 5 required permissions, and instructions for the 1-Click Auto-Connect Wizard.
+  2. **Connect AI Clients:** Step-by-step guides and direct API key links for Google Gemini, OpenAI, Anthropic Claude, and Groq.
+  3. **Marketplace Guide:** How to use the 1-Tap Copy Pack to post safely to Facebook Marketplace in 30 seconds.
+  4. **Staff Daily Guide:** Complete 60-second floor workflow for store associates.
+- **Admin Dashboard (`app/templates/admin/dashboard.html`):** Includes a collapsible **Step-by-Step Meta Setup Manual** right inside the Connect FB & IG tab, plus individual **"📖 How to Connect (Manual)"** dropdowns inside each of the 4 AI provider cards.
+- **Add/Edit Product (`app/templates/product_form.html`), Product Detail (`app/templates/product_detail.html`), Inventory Dashboard (`app/templates/dashboard.html`), Marketplace Assistant (`app/templates/marketplace_assistant.html`), and Live Previews (`app/templates/product_preview.html`):** Each screen displays live connection badges (`Connected` vs `Click to Connect in UI`) and quick buttons to open the relevant manual section.
 
 ---
 
-### Step 3.3: Generate a Permanent (Never-Expiring) Page Access Token
-Short-lived tokens expire in 1-2 hours. To generate a permanent Page Token for production:
+## 4. Connecting Facebook Page & Instagram from the Web UI
 
-1. **Get Long-Lived User Token:**
-   Run this request in your browser or Postman (replace with your App ID, App Secret, and the Short-Lived Token from Graph API Explorer):
-   ```text
-   GET https://graph.facebook.com/v21.0/oauth/access_token?
-       grant_type=fb_exchange_token&
-       client_id={YOUR_META_APP_ID}&
-       client_secret={YOUR_META_APP_SECRET}&
-       fb_exchange_token={SHORT_LIVED_TOKEN}
-   ```
-   *Response will return a 60-day `access_token`.*
+Log in as `admin`, open **Admin (`/admin`)**, and click the **`Connect FB & IG`** tab. You have two fast ways to connect both accounts from the browser:
 
-2. **Get Never-Expiring Page Token:**
-   Using that 60-day User Token, make this request:
-   ```text
-   GET https://graph.facebook.com/v21.0/me/accounts?access_token={LONG_LIVED_USER_TOKEN}
-   ```
-   *Look for the Overstock Outlet page in the output. The `access_token` inside that specific page object is a **Never-Expiring Page Access Token**!*
+### Method A: 1-Click Token Auto-Discover Wizard (Fastest — 60 Seconds)
+1. Click the link in the built-in manual to open [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/).
+2. Select your Meta App and add these 5 permissions (clickable 1-tap copy badges are provided right in the UI):
+   - `pages_show_list`
+   - `pages_read_engagement`
+   - `pages_manage_posts`
+### Method A: 1-Click Token Auto-Discover Wizard (Fastest — 60 Seconds)
+1. Click the link in the built-in manual to open [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/).
+2. Select your Meta App and add these permissions (clickable 1-tap copy badges are provided right in the UI):
+   - `pages_show_list`
+   - `pages_read_engagement`
+   - `pages_manage_posts`
+   - `business_management`
+   - `instagram_basic` *(optional if connecting Facebook only)*
+   - `instagram_content_publish` *(optional if connecting Facebook only)*
+3. Click **Generate Access Token**, approve your **Overstock Outlet** Facebook Page, and copy the token.
+4. Paste the token into the **1-Click Facebook Page & Instagram Auto-Connect Wizard** in `/admin` (optionally enter your Meta App ID & App Secret to automatically upgrade it into a **Never-Expiring Page Token**).
+5. Click **"Auto-Discover & Connect FB + IG"**.
+   - **Facebook + Instagram Mode:** If an Instagram Business account is linked to your Facebook Page, both `FB_PAGE_ID` and `IG_USER_ID` are connected and saved into `overstock.db`.
+   - **Facebook-Only Mode (Automatic Fallback):** If Instagram is **not** connected yet, the system automatically connects **Facebook Only** (`FB_PAGE_ID` and `FB_PAGE_ACCESS_TOKEN`) and leaves the Instagram toggle unchecked by default on `/products/new` so you can publish to Facebook immediately without any Instagram errors!
 
----
-
-### Step 3.4: Find Your Page ID and Instagram Business ID
-- **Facebook Page ID:** Go to your Facebook Page > **About** > scroll down to **Page Transparency** or **Page ID** (e.g. `108293847291`).
-- **Instagram Business ID:** 
-  1. Make sure your Instagram account is switched to a **Business/Creator Account** and linked to your Overstock Outlet Facebook Page.
-  2. Query Graph API Explorer:
-     ```text
-     GET https://graph.facebook.com/v21.0/{YOUR_PAGE_ID}?fields=instagram_business_account&access_token={PAGE_TOKEN}
-     ```
-  3. Copy the returned `instagram_business_account.id` (e.g. `17841400000000000`).
+### Method B: 1-Click Facebook Login Redirect (OAuth)
+1. Enter your numeric **Meta App ID** and **Meta App Secret** in `/admin` -> **Connect FB & IG**.
+2. Add `http://localhost:8000/api/admin/oauth/facebook/callback` (or your domain callback URL) under **Facebook Login > Settings > Valid OAuth Redirect URIs** in your Meta App.
+3. Click **"Connect with Facebook Login (OAuth)"** in the Admin UI to authorize in one click.
 
 ---
 
-### Step 3.5: Save Credentials in the System
+### How to Connect Instagram with Your Facebook Page (Step-by-Step)
 
-You can configure the credentials via **`.env` file** or directly through the **Admin UI**:
+To enable automatic Instagram feed and multi-photo carousel publishing alongside Facebook:
 
-#### Method 1: Using the `.env` file
-Open `.env` in the project root and enter your values:
-```env
-# Meta Graph API Credentials
-FB_PAGE_ID="108293847291"
-FB_PAGE_ACCESS_TOKEN="EAAB..."
-IG_USER_ID="17841400000000000"
+1. **Switch Instagram to a Professional Business Account (on Mobile App):**
+   - Open the **Instagram** app on your phone and go to your **Profile**.
+   - Tap the **Menu (☰)** in the top right -> **Account type and tools** -> **Switch to professional account**.
+   - Choose **Business**, select a category (e.g., *Furniture Store* / *Shopping & Retail*), and complete the setup.
+2. **Link Instagram to Your Facebook Business Page:**
+   - Open [Facebook](https://www.facebook.com/) on a computer and switch into your **Overstock Outlet** Facebook Page profile.
+   - In the left sidebar, click **Settings** (or **Manage** -> **Professional Dashboard**) -> **Linked Accounts** -> **Instagram**.
+   - Click **Connect Account**, click **Continue**, and log in with your Instagram Business username and password.
+3. **Authorize & Auto-Discover in Overstock Outlet Admin UI:**
+   - Open [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/), ensure `instagram_basic` and `instagram_content_publish` permissions are added, and click **Generate Access Token** (selecting both your Facebook Page and linked Instagram account in the popup).
+   - Paste the token into `/admin` -> **Connect FB & IG** -> **Auto-Discover & Connect FB + IG**.
+   - The system will automatically detect your `IG_USER_ID` (`@username`) and enable the Instagram publish switch across the app!
 
-# Switch from simulation mode to LIVE posting
-MOCK_SOCIAL_PUBLISHING=false
-```
-
-#### Method 2: Via Admin Dashboard
-1. Log in as `admin`.
-2. Navigate to **Admin Dashboard** > **Social Media & API Settings** tab.
-3. Paste the **Page ID**, **Page Access Token**, and **Instagram Account ID**.
-4. Click **"Test Connection"**.
-5. You will see a live confirmation:
-   ```
-   ✅ Successfully connected to Page: Overstock Outlet (ID: 108293847291)
-   ✅ Connected to @overstockoutletbmore
-   ```
+*(Note for Instagram Publishing: Meta's Instagram servers download product photos from your server's public URL when creating media containers. Ensure your app is accessed via a public HTTPS domain or Cloudflare Tunnel when publishing live to Instagram).*
 
 ---
 
-## 4. Facebook Marketplace Assisted Publishing Workflow
+## 5. Multi-Client AI Description & Vision Generator (UI Controlled)
 
-### Why an Assisted Workflow?
-Meta does not provide an open public API for individuals or retail outlets to automatically create consumer listings in Facebook Marketplace feeds without an enterprise Meta Commerce Partner account. Any third-party tool attempting unauthorized automation or browser scraping violates Meta's Terms of Service, triggering account bans, device blocks, and CAPTCHA restrictions.
+When adding or editing an item on `/products/new`, the **Description & Notes** section lets you select how descriptions are generated:
 
-### The Overstock Outlet Solution:
-Our system provides a **1-Tap Assisted Posting Workflow** engineered for speed:
-1. **Pre-Formatted Listing Card:** Prepares optimized, high-converting titles (50-80 chars), formatted prices, store pickup hours, and location tags.
-2. **1-Tap Clipboard Buttons:** Floor associates tap one button to copy Title, one to copy Price, and one to copy the Description.
-3. **Numbered Image Order Pack:** Previews images with ordered numbers so photos are uploaded in the best sequence.
-4. **Direct Deep Link:** A single click opens `https://www.facebook.com/marketplace/create/item`.
-5. **Inventory Synchronization:** Once posted on Facebook, the employee taps `"Mark as Published on Marketplace"` to update the store database with timestamp and associate attribution.
+| Engine Option | Capabilities | Where to Connect API Key |
+| :--- | :--- | :--- |
+| **⚡ Auto (Best Connected AI)** | Automatically uses the first connected AI provider below, or falls back to the Smart Retail Engine if no keys are configured | `/admin` -> **AI Copywriting** |
+| **✨ Google Gemini** (`gemini-2.5-flash`) | **Multimodal Photo Vision + Text:** Inspects the actual uploaded furniture photo (fabric, silhouette, color, seating style) + form specs | [Google AI Studio](https://aistudio.google.com/app/apikey) -> Paste in `/admin` |
+| **🧠 OpenAI GPT-4o** (`gpt-4o-mini` / `gpt-4o`) | **Multimodal Photo Vision + Text:** Inspects the uploaded furniture photo + form specs | [OpenAI API Keys](https://platform.openai.com/api-keys) -> Paste in `/admin` |
+| **🤖 Anthropic Claude** (`claude-3-5-haiku-latest`) | **Multimodal Photo Vision + Text:** Inspects the uploaded furniture photo + form specs | [Anthropic Console](https://console.anthropic.com/settings/keys) -> Paste in `/admin` |
+| **🚀 Groq Llama** (`llama-3.3-70b-versatile`) | **Ultra-Fast Text Generation:** Generates high-converting showroom copy in <1 second | [GroqCloud Console](https://console.groq.com/keys) -> Paste in `/admin` |
+| **🏷️ Smart Retail Copy Engine** | **100% Built-In & Offline (Zero Keys Needed):** Generates category-aware hooks, retail vs. outlet dollar/percent savings callouts, condition descriptions, bulleted specs, and store pickup details | Ready out of the box (no key needed) |
+
+You can also customize the store's **Custom AI Instructions / Tone** in `/admin` -> **AI Copywriting** and test all AI providers with the **"Test All AI Providers"** button.
 
 ---
 
-## 5. How to Use (Day-to-Day Employee Workflow)
+## 6. Facebook Marketplace 1-Tap Assisted Publishing Workflow
 
-Associates can catalog and publish showroom furniture in under **60 seconds**:
+Meta prohibits third-party bots from auto-posting to personal Facebook Marketplace consumer feeds. To protect your store accounts from bans while keeping listing time under 30 seconds, the system includes the **Marketplace Publishing Assistant** (`/products/{id}/marketplace-assistant`):
 
-```
-[1. Open App on Phone] ➔ [2. Tap "Add New Product"] ➔ [3. Snap Photos] ➔ [4. Enter Title & Price] ➔ [5. Tap "Save & Publish"]
+1. **1-Tap Copy Pack:** Tap to copy the pre-formatted **Listing Title**, **Price**, **Optimized Description** (with specs, savings, and Baltimore showroom pickup info), and **Search Tags**.
+2. **Ordered Photo Pack:** Displays your normalized product photos in exact upload order (`#1`, `#2`, `#3`) with 1-tap download buttons.
+3. **Direct Marketplace Launcher:** Tap **"1. Open Facebook Marketplace"** to launch `https://www.facebook.com/marketplace/create/item`, paste the fields, and publish.
+4. **Status Sync:** Tap **"Mark as Published on Marketplace"** to log the publication and update the item's status to `Published` on the dashboard.
+
+---
+
+## 7. Day-to-Day Employee Workflow (60-Second Listing)
+
+```text
+[1. Tap "+ Add Item"] ➔ [2. Snap 1-4 Photos] ➔ [3. Enter Title & Price] ➔ [4. Tap "Auto-Generate" 🪄] ➔ [5. Tap "Save & Publish"]
 ```
 
-1. **Open Dashboard:** Associate opens the app on their phone.
-2. **Snap Photos:** Tap **"Open Camera"** and take 1 to 4 photos of the furniture piece (front, 45-degree angle, fabric closeup, dimensions label).
-3. **Enter Details:**
-   - **Title:** e.g., *"West Elm Harmony 92\" Down-Filled Sofa"*
-   - **Price:** e.g., `649.00`
-   - **Retail Price (Optional):** e.g., `1899.00` (system auto-calculates *"Save $1,250!"*)
-   - **Category & Condition:** Select from dropdowns.
-   - **Magic Wand Description (🪄):** Tap the magic wand button to automatically generate retail sales copy with showroom pickup address and contact info.
-4. **Select Publishing Channels:**
-   - [x] **Facebook Business Page**
-   - [x] **Instagram Business**
-   - [x] **Facebook Marketplace (Assisted)**
-5. **Save & Publish:** Tap **"Save & Publish"**.
-   - The Facebook Page feed post goes live immediately via Graph API.
-   - The Instagram post goes live immediately.
-   - The Marketplace Assistant opens with 1-tap copy buttons to finish the marketplace listing in 30 seconds.
+1. **Capture Photos:** Tap **"Open Camera"** on your phone to snap photos of the furniture piece on the showroom floor.
+2. **Enter Core Info:** Fill in **Product Title**, **Outlet Price ($)**, optional **Retail Price ($)** (auto-calculates savings), **Category**, and **Condition**.
+3. **Auto-Generate Copy:** Choose an AI Engine (or leave on **⚡ Auto**) and tap **"Auto-Generate"** to write the full retail description.
+4. **Publish:** Toggle **Facebook Business Page**, **Instagram Business Account**, and **Facebook Marketplace (Assisted)**, then tap **"Save & Publish"**.
 
 ---
 
-## 6. Administrator Guide & Operations
+## 8. Administrator Guide & Production Deployment
 
-### Monitoring Publishing Activity
-- Navigate to `/admin` > **Publishing Activity & Retries**.
-- View real-time status of all posts: `Success`, `Assisted`, or `Failed`.
-- For any failed post (due to network timeout or permission issues), click the yellow **"Retry"** button to re-dispatch the payload instantly.
+### Admin Control Center (`/admin`)
+- **Publish Logs Tab:** View every Facebook Page, Instagram, and Marketplace publish event with timestamps, links to live posts, error messages, and 1-click **Retry** buttons.
+- **Connect FB & IG Tab:** Run the 1-Click Auto-Discover Wizard, launch Facebook OAuth, test live Meta Graph API connectivity, and update Store Name, Location, Phone, and Hours.
+- **AI Copywriting Tab:** Connect/switch between Gemini, OpenAI, Claude, Groq, and the Smart Retail Copy Engine, and test all connected AI keys in one click.
+- **Staff Accounts Tab:** Create or disable employee logins at any time.
 
-### Employee Account Provisioning
-- Go to `/admin` > **Employee Accounts**.
-- Create associate logins with unique usernames and temporary passwords.
-- Instantly toggle **"Disable"** for former employees to immediately revoke login access.
-
----
-
-## 7. Production Deployment Checklist (Cloud & Local Server)
-
-Before exposing the system to the public internet or running in a 24/7 store environment:
-
-- [x] **Environment Secrets:** Change `SECRET_KEY` in `.env` to a secure 32+ character random string.
-- [x] **Default Passwords:** Update `admin` and `employee` passwords immediately.
-- [x] **SSL / HTTPS:** In production, route traffic through Nginx or Cloudflare Tunnel with an SSL certificate (required by Meta for webhook callbacks and secure cookie transmission).
-- [x] **PostgreSQL Upgrade (Optional):** For multi-terminal concurrency, uncomment `DATABASE_URL=postgresql://...` in `.env`.
-- [x] **Data Backups:** Schedule daily backups of `overstock.db` and the `uploads/` directory.
-
-### Production Docker Deployment
+### Docker Deployment (Optional)
 ```bash
-# Build and run containerized daemon
 docker-compose up -d --build
-
-# View container logs
-docker-compose logs -f
 ```
-
----
-
-## 8. Automated Testing & Verification
-
-The system includes a 100% passing automated test suite covering all critical paths:
-
-```bash
-.\venv\Scripts\python.exe -m pytest tests/ -v
-```
-
-### Verified Test Suites:
-- `test_login_success`: Validates JWT token issuance and employee role.
-- `test_login_invalid_password`: Verifies 401 Unauthorized rejection on bad password.
-- `test_list_products_api`: Tests inventory retrieval and filtering.
-- `test_create_product_and_duplicate_prevention`: Verifies product creation and checks 409 Conflict rejection for accidental duplicate listings within 7 days.
-- `test_image_upload_and_thumbnail`: Validates multipart uploads, Pillow EXIF handling, and 400x400 thumbnail generation.
-- `test_facebook_caption_and_simulation`: Verifies Facebook Page caption formatting with Baltimore tags.
-- `test_instagram_caption_and_simulation`: Verifies Instagram caption styling and retail hashtags.
-- `test_marketplace_assisted_guide`: Verifies 1-tap clipboard payloads and sequential photo generation.
-- `test_web_routes_accessibility`: Tests all Jinja2 HTML templates and HTTP endpoints.
-
----
-
-## 📞 Support & Store Information
-- **Store:** Overstock Outlet
-- **Location:** Baltimore, MD, USA
-- **Phone:** (410) 555-0199
-- **Facebook:** [https://www.facebook.com/overstockoutletbmore](https://www.facebook.com/overstockoutletbmore)
+All settings configured in the Web UI are persisted inside `overstock.db`, and uploaded images are stored in `uploads/`.

@@ -31,8 +31,18 @@ class Product(Base):
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     creator = relationship("User", back_populates="products")
     
-    images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan", order_by="ProductImage.sort_order")
-    publish_logs = relationship("PublishLog", back_populates="product", cascade="all, delete-orphan", order_by="desc(PublishLog.created_at)")
+    images = relationship(
+        "ProductImage",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="desc(ProductImage.is_primary), ProductImage.sort_order"
+    )
+    publish_logs = relationship(
+        "PublishLog",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="desc(PublishLog.created_at)"
+    )
 
 class ProductImage(Base):
     __tablename__ = "product_images"
@@ -49,4 +59,3 @@ class ProductImage(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     product = relationship("Product", back_populates="images")
-

@@ -1,25 +1,29 @@
+import uuid
 import pytest
 from io import BytesIO
 from PIL import Image
 from fastapi.testclient import TestClient
-from app.main import app
-from app.database import Base, engine, SessionLocal
+from app.main import app, init_system_state
+from app.database import Base, engine
 from app.models.product import Product
-from app.models.user import User
-from app.services.auth_service import init_default_users
 from app.services.facebook_service import facebook_service
 from app.services.instagram_service import instagram_service
 from app.services.marketplace_service import marketplace_service
+from app.services.ai_service import ai_service
 
 client = TestClient(app)
 
 @pytest.fixture(scope="module", autouse=True)
 def setup_database():
     Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    init_default_users(db)
-    db.close()
+    init_system_state()
     yield
+
+def _get_auth_headers(username: str = "employee", password: str = "overstock123") -> dict:
+    res = client.post("/api/auth/login", data={"username": username, "password": password})
+    assert res.status_code == 200
+    token = res.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
 
 def test_login_success():
     res = client.post("/api/auth/login", data={"username": "employee", "password": "overstock123"})
@@ -33,19 +37,16 @@ def test_login_invalid_password():
     assert res.status_code == 401
 
 def test_list_products_api():
-    res = client.get("/api/products")
+    headers = _get_auth_headers()
+    res = client.get("/api/products", headers=headers)
     assert res.status_code == 200
     data = res.json()
     assert "items" in data
     assert "total" in data
 
 def test_create_product_and_duplicate_prevention():
-    import uuid
     unique_suffix = uuid.uuid4().hex[:6]
-    # Login as employee
-    login_res = client.post("/api/auth/login", data={"username": "employee", "password": "overstock123"})
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = _get_auth_headers()
 
     payload = {
         "title": f"Modern Scandinavian Oak Coffee Table {unique_suffix}",
@@ -82,20 +83,16 @@ def test_create_product_and_duplicate_prevention():
     client.delete(f"/api/products/{product_id2}", headers=headers)
 
 def test_image_upload_and_thumbnail():
-    login_res = client.post("/api/auth/login", data={"username": "employee", "password": "overstock123"})
-    token = login_res.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = _get_auth_headers()
 
-    # Create dummy product
-    create_res = client.post("/api/products", json={
-        "title": "Test Accent Chair For Photo Upload",
+    create_res = client.post("/api/products?force_duplicate=true", json={
+        "title": f"Test Accent Chair {uuid.uuid4().hex[:6]}",
         "price": 149.00,
         "category": "Living Room",
         "condition": "Brand New"
     }, headers=headers)
     pid = create_res.json()["id"]
 
-    # Create fake in-memory image
     file_io = BytesIO()
     img = Image.new("RGB", (600, 600), color="blue")
     img.save(file_io, format="JPEG")
@@ -111,75 +108,115 @@ def test_image_upload_and_thumbnail():
     # Cleanup
     client.delete(f"/api/products/{pid}", headers=headers)
 
-def test_facebook_caption_and_simulation():
-    db = SessionLocal()
-    prod = db.query(Product).first()
-    db.close()
-    if prod:
-        caption = facebook_service.format_page_caption(prod)
-        assert prod.title in caption
-        assert "Baltimore, MD" in caption
-        assert "Overstock Outlet" in caption
+def test_facebook_and_instagram_captions():
+    sample = Product(
+        id=1,
+        product_code="OO-TEST-001",
+        title="Solid Oak Dining Table",
+        price=425.0,
+        original_price=950.0,
+        category="Dining Room",
+        condition="Brand New",
+        availability="In Stock",
+        brand="Overstock Outlet"
+    )
+    fb_caption = facebook_service.format_page_caption(sample)
+    assert "Solid Oak Dining Table" in fb_caption
+    assert "Baltimore, MD" in fb_caption
+    assert "Overstock Outlet" in fb_caption
 
-def test_instagram_caption_and_simulation():
-    db = SessionLocal()
-    prod = db.query(Product).first()
-    db.close()
-    if prod:
-        caption = instagram_service.format_ig_caption(prod)
-        assert prod.title in caption
-        assert "@overstockoutletbmore" or "#overstockoutlet" in caption
+    ig_caption = instagram_service.format_ig_caption(sample)
+    assert "Solid Oak Dining Table" in ig_caption
+    assert "#overstockoutlet" in ig_caption
+
+def test_ai_multi_provider_and_smart_template():
+    status = ai_service.get_provider_status()
+    assert "gemini" in status["providers"]
+    assert "openai" in status["providers"]
+    assert "anthropic" in status["providers"]
+    assert "groq" in status["providers"]
+    assert "smart_template" in status["providers"]
+
+    res = ai_service.generate_smart_template(
+        title="West Elm Velvet Sectional Sofa",
+        category="Living Room",
+        condition="Like New",
+        price=649.0,
+        original_price=1899.0,
+        brand="West Elm",
+        color="Emerald Green",
+        dimensions="92x41x34"
+    )
+    assert res["success"] is True
+    assert "save $1,250" in res["description"].lower()
 
 def test_marketplace_assisted_guide():
-    db = SessionLocal()
-    try:
-        prod = db.query(Product).first()
-        if prod:
-            guide = marketplace_service.get_assisted_guide(prod)
-            assert guide["product_id"] == prod.id
-            assert guide["marketplace_url"] == "https://www.facebook.com/marketplace/create/item"
-            assert len(guide["instructions"]) > 0
-            assert "Baltimore, MD" in guide["description"]
-    finally:
-        db.close()
+    sample = Product(
+        id=1,
+        product_code="OO-TEST-002",
+        title="Velvet Sectional Sofa",
+        price=649.0,
+        original_price=1299.0,
+        category="Living Room",
+        condition="Like New",
+        availability="In Stock"
+    )
+    sample.images = []
+    guide = marketplace_service.get_assisted_guide(sample)
+    assert guide["product_id"] == 1
+    assert guide["marketplace_url"] == "https://www.facebook.com/marketplace/create/item"
+    assert len(guide["instructions"]) > 0
+    assert "Baltimore, MD" in guide["description"]
+
+def test_admin_settings_persistence():
+    admin_headers = _get_auth_headers("admin", "admin123")
+    res = client.put("/api/admin/settings", json={
+        "store_hours": "Mon-Sat: 10AM - 7PM, Sun: 11AM - 5PM",
+        "store_phone": ""
+    }, headers=admin_headers)
+    assert res.status_code == 200
+    assert res.json()["message"] == "Settings saved successfully"
+
+    ai_res = client.put("/api/admin/ai-settings", json={
+        "ai_provider": "auto",
+        "gemini_model": "gemini-2.5-flash"
+    }, headers=admin_headers)
+    assert ai_res.status_code == 200
 
 def test_web_routes_accessibility():
-    # Should redirect root to /dashboard
     res_root = client.get("/", follow_redirects=False)
     assert res_root.status_code == 302
     assert res_root.headers["location"] == "/dashboard"
 
-    # Login page should return 200
+    client.cookies.clear()
     res_login = client.get("/login")
     assert res_login.status_code == 200
     assert "Overstock Outlet" in res_login.text
+    assert "One-Click Demo" not in res_login.text
 
-    # Login as employee to get cookie
     login_res = client.post("/api/auth/login", data={"username": "employee", "password": "overstock123"})
     assert login_res.status_code == 200
 
-    # Test /products/new renders without 500 error
     res_new = client.get("/products/new")
     assert res_new.status_code == 200
     assert "Product Photos" in res_new.text
 
-    # Test dashboard renders
     res_dash = client.get("/dashboard")
     assert res_dash.status_code == 200
 
-    # Test product detail, edit, preview, assistant
-    db = SessionLocal()
-    prod = db.query(Product).first()
-    db.close()
-    if prod:
-        res_detail = client.get(f"/products/{prod.id}")
-        assert res_detail.status_code == 200
+    create_res = client.post("/api/products?force_duplicate=true", json={
+        "title": f"Route Verification Sofa {uuid.uuid4().hex[:6]}",
+        "price": 399.00,
+        "category": "Living Room",
+        "condition": "Brand New"
+    })
+    assert create_res.status_code == 201
+    pid = create_res.json()["id"]
 
-        res_edit = client.get(f"/products/{prod.id}/edit")
-        assert res_edit.status_code == 200
-
-        res_prev = client.get(f"/products/{prod.id}/preview")
-        assert res_prev.status_code == 200
-
-        res_assist = client.get(f"/products/{prod.id}/marketplace-assistant")
-        assert res_assist.status_code == 200
+    try:
+        assert client.get(f"/products/{pid}").status_code == 200
+        assert client.get(f"/products/{pid}/edit").status_code == 200
+        assert client.get(f"/products/{pid}/preview").status_code == 200
+        assert client.get(f"/products/{pid}/marketplace-assistant").status_code == 200
+    finally:
+        client.delete(f"/api/products/{pid}")

@@ -39,11 +39,15 @@ class MarketplaceService:
             lines.append("")
 
         lines.append("--- STORE LOCATION & PICKUP ---")
-        lines.append(f"📍 Overstock Outlet - Baltimore, MD")
-        lines.append(f"🕒 Hours: {settings.STORE_HOURS}")
-        lines.append(f"📞 Questions / Hold: Call or Text {settings.STORE_PHONE}")
-        lines.append(f"🚚 Local delivery available upon request!")
-        lines.append(f"💳 We accept Cash, Cards, and Digital Payments.")
+        lines.append(f"📍 {settings.STORE_NAME} - {settings.STORE_LOCATION}")
+        if settings.STORE_HOURS and settings.STORE_HOURS.strip():
+            lines.append(f"🕒 Hours: {settings.STORE_HOURS.strip()}")
+        if settings.STORE_PHONE and settings.STORE_PHONE.strip():
+            lines.append(f"📞 Questions / Hold: Call or Text {settings.STORE_PHONE.strip()}")
+        else:
+            lines.append("💬 Questions / Hold: Message us directly on Facebook!")
+        lines.append("🚚 Local delivery available upon request!")
+        lines.append("💳 We accept Cash, Cards, and Digital Payments.")
         lines.append("⚡ First come, first served. Message us to confirm availability before heading over!")
 
         return "\n".join(lines)
@@ -89,7 +93,7 @@ class MarketplaceService:
             "original_price": product.original_price,
             "category": product.category,
             "condition": product.condition,
-            "location": "Baltimore, MD",
+            "location": settings.STORE_LOCATION,
             "description": self.format_marketplace_description(product),
             "suggested_tags": self.get_suggested_tags(product),
             "marketplace_url": "https://www.facebook.com/marketplace/create/item",
@@ -98,4 +102,3 @@ class MarketplaceService:
         }
 
 marketplace_service = MarketplaceService()
-

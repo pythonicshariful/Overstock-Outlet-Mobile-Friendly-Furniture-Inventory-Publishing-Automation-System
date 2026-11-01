@@ -4,15 +4,23 @@
 
 {% block content %}
 <div class="row align-items-center mb-3 g-2">
-  <div class="col-12 col-md-6">
+  <div class="col-12 col-md-5">
     <h3 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
       <span>Furniture Inventory</span>
       <span class="badge bg-secondary fs-7 rounded-pill">{{ products|length }} items</span>
     </h3>
     <p class="text-muted small mb-0">Overstock Outlet • Baltimore, MD</p>
   </div>
-  <div class="col-12 col-md-6 text-md-end">
-    <a href="/products/new" class="btn btn-warning btn-touch w-100 w-md-auto fw-bold shadow-sm">
+  <div class="col-12 col-md-7 text-md-end d-flex flex-wrap justify-content-md-end gap-2">
+    <button type="button" class="btn btn-outline-primary btn-sm fw-bold px-3 py-2" onclick="openManualModal('fb')">
+      <i class="bi bi-book-half me-1"></i> 📖 User Manual & Connect Guide
+    </button>
+    {% if user and user.role == 'admin' %}
+    <a href="/admin" class="btn btn-outline-dark btn-sm fw-bold px-3 py-2">
+      <i class="bi bi-plug-fill text-warning me-1"></i> Connect FB / IG / AI
+    </a>
+    {% endif %}
+    <a href="/products/new" class="btn btn-warning btn-touch flex-grow-1 flex-md-grow-0 fw-bold shadow-sm">
       <i class="bi bi-camera-fill me-2 fs-5"></i> Add New Product
     </a>
   </div>
@@ -180,13 +188,17 @@
         <i class="bi bi-box-seam fs-1"></i>
       </div>
       <h4 class="fw-bold text-navy">No Furniture Items Found</h4>
-      <p class="text-muted">Start adding inventory by taking photos directly with your phone!</p>
-      <a href="/products/new" class="btn btn-warning btn-touch px-4 fw-bold mt-2">
-        <i class="bi bi-camera-fill me-2"></i> Add First Item
-      </a>
+      <p class="text-muted">Start adding inventory by taking photos directly with your phone, or open the User Manual to connect Facebook, Instagram & AI!</p>
+      <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
+        <a href="/products/new" class="btn btn-warning btn-touch px-4 fw-bold">
+          <i class="bi bi-camera-fill me-2"></i> Add First Item
+        </a>
+        <button type="button" class="btn btn-outline-primary btn-touch px-4 fw-bold" onclick="openManualModal('fb')">
+          <i class="bi bi-book-half me-2"></i> Open Setup & User Manual
+        </button>
+      </div>
     </div>
   </div>
 {% endif %}
 
 {% endblock %}
-

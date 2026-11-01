@@ -13,5 +13,3 @@ services:
     environment:
       - APP_ENV=production
       - DATABASE_URL=sqlite:////app/data/overstock.db
-      - MOCK_SOCIAL_PUBLISHING=true
-
